@@ -158,3 +158,6 @@ vite.config.ts.timestamp-*
 .claude/skills/verification-before-completion/
 .claude/skills/writing-plans/
 .claude/skills/writing-skills/
+
+# Personal, per-machine Claude Code settings
+.claude/settings.local.json

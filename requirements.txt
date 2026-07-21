@@ -1,0 +1,6 @@
+# Python dependencies for the analysis.
+# Install with:  pip install -r requirements.txt
+pandas
+numpy
+yfinance      # free market data (Yahoo Finance)
+matplotlib    # charts
