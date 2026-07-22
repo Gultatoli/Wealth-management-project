@@ -117,6 +117,26 @@ Judging the portfolios by return per unit of risk, rather than raw return, adds 
 
 (Sharpe and Sortino assume a 2% cash rate; the exact figure does not change the ranking.)
 
+### Risk-targeting: a static band, a moving reality
+
+There is a formal industry version of this project's question. UK risk profilers such as Dynamic Planner, Defaqto and EValue map each risk level to a target volatility band, and "risk-target managed" funds are run to keep their volatility inside it. So the natural test is whether each portfolio's realised volatility actually stayed in its band.
+
+Using illustrative bands in the style of those providers (the specific numbers are illustrative, not any firm's proprietary figures):
+
+| Portfolio | Target band | Full-period vol | Rolling 1-year vol below / in / above band | Peak 1-year vol |
+|-----------|-------------|-----------------|--------------------------------------------|-----------------|
+| Defensive (20% equity) | 4–8% | 5.5% | 51% / 36% / 13% | 13.4% |
+| Cautious (40%) | 6–11% | 7.9% | 45% / 43% / 12% | 18.7% |
+| Balanced (60%) | 9–14% | 11.2% | 53% / 34% / 13% | 26.7% |
+| Growth (80%) | 12–18% | 15.0% | 53% / 31% / 16% | 36.8% |
+| Adventurous (100%) | 15–22% | 19.2% | 52% / 31% / 17% | 49.4% |
+
+Two things stand out. On average, each portfolio's volatility sits neatly inside its band, so the labels are calibrated correctly. But average is not experience. Measured over a rolling 12-month window, realised volatility spends most of its time *outside* the band: below it in the calm years, and above it in every crisis.
+
+The cautious portfolio makes the point. Its band tops out at 11%, but its rolling 1-year volatility reached 12.7% in 2020, breached 11% again in 2022, and hit 18.6% in 2008, which is the volatility of an adventurous portfolio. For those stretches a "cautious" client was carrying the risk of a much higher risk level, without anything on their statement changing. A single risk number describes the long-run average well and the lived experience poorly.
+
+![Risk-targeting: the cautious portfolio's rolling volatility](figures/risk_targeting_cautious.png)
+
 ### Finding 4: the range of outcomes, and why "cautious" can be the wrong answer
 
 The findings so far look backward. A wealth manager also has to look forward, and the standard tool for that is Monte Carlo: run the portfolio through thousands of simulated futures and read off the range of results. The usual version assumes returns are bell-shaped and independent, which understates crashes and ignores the correlation shift documented above. So instead of drawing from a bell curve, this simulation resamples real history in six-month blocks, keeping true crashes, fat tails, and the real joint behaviour of the assets. Ten thousand paths, thirty years.
