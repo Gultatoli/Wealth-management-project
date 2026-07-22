@@ -2,6 +2,8 @@
 
 Whether a single, static risk label can describe a portfolio whose risks move and a client whose needs change. Tested on almost 23 years of public market data (October 2003 to July 2026).
 
+How to read this: the findings run in order, and each one is a short claim, the mechanism behind it, and a chart. If you only read one section, make it the [headline result](#headline-result) at the end. It carries the whole argument.
+
 > Nothing here is investment advice. It is a historical analysis built from free, public data, using simplified index portfolios as proxies. All figures are in US dollars. For a sterling-based investor, currency moves and hedging can materially change returns, drawdowns, and recovery times, so the magnitudes here should not be read as a UK investor's exact experience.
 
 ---
