@@ -53,6 +53,8 @@ Across the full period the portfolios line up exactly as their labels promise. M
 
 A cautious portfolio really was far less risky than an all-equity one: about a third of the volatility, and less than half the worst drawdown. Hold onto that through the next section. It is the honest counterweight to what follows.
 
+![Growth of £1 by risk level](figures/risk_graded_growth.png)
+
 ### Finding 1 (diversification drift): in 2022 the bond cushion gave far less protection than the label implies
 
 A cautious portfolio leans on bonds to cushion equity losses. That cushion depends on bonds and equities not falling together. Usually they do not. In 2022 they did, as rising interest rates hit both at once.
