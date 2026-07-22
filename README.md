@@ -198,9 +198,33 @@ Within this particular sample and methodology, judging the portfolios by return 
 
 (Sharpe and Sortino assume a 2% cash rate; the exact figure does not change the ranking.)
 
+## Costs: fees and tax, the drag you can control
+
+Every finding so far is about risk that is uncertain and hard to see. Fees and tax are the opposite. They are close to certain, and unlike market risk they are largely in the client's control. On a long horizon they are also large.
+
+Take the balanced portfolio. Gross of costs, £100,000 grew to about £496,000 over the 23 years.
+
+**Fees.** A single annual percentage, charged on the whole pot every year, compounds into far more than its headline rate.
+
+| Annual fee | Final value of £100,000 | Lost to fees | Share of the gain lost |
+|-----------|-------------------------|--------------|------------------------|
+| 0.5% | £442,000 | £53,000 | 14% |
+| 1.0% | £394,000 | £101,000 | 26% |
+| 1.5% | £351,000 | £144,000 | 36% |
+
+A 1% fee, which is well within the range of a discretionary manager plus platform plus fund costs, cost about £101,000 on a £100,000 investment over 23 years, more than a quarter of the entire gain. The fee is 1% a year, but because it is charged on the whole pot every year, the damage compounds into something far larger than 1%.
+
+![The compounding cost of a 1% fee](figures/fee_drag.png)
+
+**Tax.** The wrapper a client uses matters on a similar scale. This is harder to pin down precisely, because it depends on allowances, the split between dividend and interest income, and how gains are realised, so the figures here are illustrative for a higher-rate taxpayer, not a forecast.
+
+The recurring part is income tax. Taxing an assumed 2.5% income yield at 35% in a taxable account acts like an extra 0.87% annual fee, costing roughly £90,000 over the period, similar in size to a 1% management fee, and an ISA avoids it entirely. Capital gains tax sits on top: realising the whole gain at once would add around £73,000, though phasing disposals and using annual exemptions reduce that, and an ISA removes it. So the ISA wrapper was worth somewhere between about £90,000 and £160,000 on a £100,000 investment over 23 years, with the lower end the robust figure.
+
+**Why this belongs in a report about risk.** Fees and tax feed straight into goal risk. A 1% fee is a certain reduction in return, which is a certain increase in the chance a drawdown pot runs out. The rest of this report is about risks a manager cannot control, only understand. Costs are the part they can.
+
 ## Headline result
 
-Over almost 23 years, the risk labels ranked market risk correctly, but the risk beneath a fixed label drifted in three ways. Diversification drift: in 2022 a "cautious" portfolio's loss was 82% as large as an all-equity portfolio's, against 29% in 2008, because the stock-bond correlation flipped from −0.14 to +0.23, and it then recovered more slowly than the aggressive portfolios. Concentration drift: cap-weighted US equity grew far more concentrated in its largest companies, so a "balanced" label in 2025 covers a different exposure than in 2019. Objective drift: for a long-horizon retiree drawing 4% or more, the most cautious portfolio was the *least* likely to last. A static label ranks market risk, but cannot capture goal risk, the changing shape of the portfolio, or a client's changing needs.
+Over almost 23 years, the risk labels ranked market risk correctly, but the risk beneath a fixed label drifted in three ways. Diversification drift: in 2022 a "cautious" portfolio's loss was 82% as large as an all-equity portfolio's, against 29% in 2008, because the stock-bond correlation flipped from −0.14 to +0.23, and it then recovered more slowly than the aggressive portfolios. Concentration drift: cap-weighted US equity grew far more concentrated in its largest companies, so a "balanced" label in 2025 covers a different exposure than in 2019. Objective drift: for a long-horizon retiree drawing 4% or more, the most cautious portfolio was the *least* likely to last. A static label ranks market risk, but cannot capture goal risk, the changing shape of the portfolio, or a client's changing needs. And against all of that uncertainty, the one near-certain number is cost: a 1% annual fee alone consumed about a quarter of the balanced portfolio's 23-year gain.
 
 ## Method
 
@@ -227,7 +251,7 @@ What this project does **not** prove. This section is deliberately long, because
 - **US bonds and US dollars.** The bond side is a US aggregate-bond proxy and everything is priced in dollars. Currency and hedging can materially change a sterling investor's returns, drawdowns, recovery times, and even correlations. The UK conclusions here are directional, not precise.
 - **Concentration is measured indirectly.** Finding 2 uses the cap-weighted versus equal-weighted gap, which is consistent with rising concentration but is not a direct holdings-based measure, and it is not proof of an AI-specific bet.
 - **The Monte Carlo is a stress test against history, not a forecast**, and its decumulation result is conditional on horizon and withdrawal rate, as the sensitivity tables show.
-- **No fees or tax.** Platform charges, fund costs, and ISA or pension wrappers are not modelled, and all of them matter to a real client.
+- **The main analysis is gross of costs.** The return, risk, and simulation figures do not deduct fees or tax. Those are analysed separately in the costs section, where the tax figures in particular are illustrative and assumption-dependent.
 - **Risk-adjusted figures are sample-specific**, depending on the risk-free assumption, frequency, and period.
 - **The past is not a forecast.** Every finding is descriptive.
 
@@ -239,7 +263,7 @@ What this project does **not** prove. This section is deliberately long, because
 - **Window:** the common window across all series, set by the youngest (AGG, RSP), is late 2003 to mid 2026. ETF inception dates bound this; earlier history is not available for these exact instruments.
 - **Frequency and rebalancing:** the historical analysis uses daily data with annual rebalancing on the first trading day of each year. The Monte Carlo uses monthly returns with monthly rebalancing; the difference is immaterial to the conclusions.
 - **Missing data:** occasional gaps in the Yahoo series are dropped; series are inner-joined so only days present in every series are used.
-- **Costs:** no transaction costs, fund fees, platform charges, or taxes are modelled.
+- **Costs:** the main analysis is gross; no transaction costs, fund fees, platform charges, or taxes are deducted. Fees and tax are analysed separately in `analysis/costs.py`, with the tax figures illustrative.
 - **Currency:** all series are in US dollars; no currency conversion or hedging is applied.
 - **Monte Carlo:** historical block bootstrap, 6-month blocks, 10,000 paths, seeded for reproducibility. Assumptions (pot, withdrawal rate, inflation, horizon) are constants at the top of `analysis/monte_carlo.py` and are varied in the sensitivity tables.
 
@@ -251,9 +275,10 @@ cd analysis
 python3 fetch_data.py     # downloads the data into ../data/
 python3 analyse.py        # the historical analysis: results.md and most figures
 python3 monte_carlo.py    # the forward-looking simulation and its figures
+python3 costs.py          # fees and tax drag
 ```
 
-Every number in this README comes from `analysis/analyse.py` or `analysis/monte_carlo.py`, and the full printouts are saved in `analysis/results.md` and `analysis/monte_carlo_results.md`.
+Every number in this README comes from `analysis/analyse.py`, `analysis/monte_carlo.py`, or `analysis/costs.py`, and the full printouts are saved in `analysis/results.md`, `analysis/monte_carlo_results.md`, and `analysis/costs_results.md`.
 
 ## Data sources
 
