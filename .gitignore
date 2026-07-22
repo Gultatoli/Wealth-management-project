@@ -161,3 +161,7 @@ vite.config.ts.timestamp-*
 
 # Personal, per-machine Claude Code settings
 .claude/settings.local.json
+
+# Python
+__pycache__/
+*.pyc
