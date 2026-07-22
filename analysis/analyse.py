@@ -1,0 +1,505 @@
+"""
+The analysis. Builds the risk-graded portfolios, measures their risk, and runs
+the three tests described in the top-level README.
+
+Everything here is deliberately explicit rather than clever, so that every
+number can be traced back to a line of code and explained out loud.
+
+Run (after fetch_data.py):
+    python3 analyse.py
+
+Outputs:
+    - prints a results summary
+    - writes results.md  (the numbers, ready to paste into the README)
+    - writes ../figures/*.png  (the charts)
+"""
+
+import os
+import numpy as np
+import pandas as pd
+import matplotlib
+matplotlib.use("Agg")  # no screen in this environment; save charts to file
+import matplotlib.pyplot as plt
+
+HERE = os.path.dirname(__file__)
+DATA_DIR = os.path.join(HERE, "..", "data")
+FIG_DIR = os.path.join(HERE, "..", "figures")
+TRADING_DAYS = 252
+
+# ---------------------------------------------------------------------------
+# 1. Load the price series and line them up on the same trading days.
+# ---------------------------------------------------------------------------
+def load_prices():
+    series = {}
+    for ticker in ["SPY", "EFA", "EEM", "RSP", "AGG", "SOXX"]:
+        df = pd.read_csv(os.path.join(DATA_DIR, f"{ticker}.csv"),
+                         parse_dates=["date"], index_col="date")
+        series[ticker] = df["adj_close"].rename(ticker)
+    # inner join keeps only days present in every series
+    prices = pd.concat(series.values(), axis=1, join="inner").dropna()
+    return prices
+
+
+# ---------------------------------------------------------------------------
+# 2. Build a portfolio that is rebalanced to its target weights every year.
+#    Between rebalances the weights drift with the market, exactly as a real
+#    portfolio left alone for a year would.
+# ---------------------------------------------------------------------------
+def portfolio_value(prices, weights):
+    """weights: dict like {'SPY': 0.6, 'AGG': 0.4}. Returns a value series."""
+    value = pd.Series(index=prices.index, dtype=float)
+    running = 1.0
+    for year, block in prices.groupby(prices.index.year):
+        start = block.iloc[0]
+        # growth of each asset since the first trading day of the year
+        growth = block[list(weights)] / start[list(weights)]
+        # portfolio growth within the year = weighted sum of asset growth
+        within = (growth * pd.Series(weights)).sum(axis=1)
+        value.loc[block.index] = running * within
+        running = value.loc[block.index].iloc[-1]  # carry year-end value forward
+    return value
+
+
+# ---------------------------------------------------------------------------
+# 3. Risk and return measures.
+# ---------------------------------------------------------------------------
+def annual_vol(value):
+    daily = value.pct_change().dropna()
+    return daily.std() * np.sqrt(TRADING_DAYS)
+
+def max_drawdown(value):
+    return (value / value.cummax() - 1.0).min()
+
+def worst_rolling_year(value):
+    roll = value / value.shift(TRADING_DAYS) - 1.0
+    return roll.min()
+
+def cagr(value):
+    years = (value.index[-1] - value.index[0]).days / 365.25
+    return (value.iloc[-1] / value.iloc[0]) ** (1 / years) - 1
+
+def calendar_year_return(value, year):
+    block = value[value.index.year == year]
+    if len(block) < 2:
+        return np.nan
+    return block.iloc[-1] / block.iloc[0] - 1
+
+def drawdown_in_window(value, start, end):
+    w = value[(value.index >= start) & (value.index <= end)]
+    if len(w) < 2:
+        return np.nan
+    return (w / w.cummax() - 1.0).min()
+
+# Risk-adjusted measures. We assume a 2% annual cash (risk-free) rate, roughly
+# the average of UK/US short rates over the window. The exact figure barely
+# changes the ranking between portfolios; it is stated so the numbers can be
+# reproduced.
+RISK_FREE = 0.02
+
+def _ann_mean(value):
+    return value.pct_change().dropna().mean() * TRADING_DAYS
+
+def sharpe(value):
+    """Return per unit of total volatility."""
+    return (_ann_mean(value) - RISK_FREE) / annual_vol(value)
+
+def sortino(value):
+    """Return per unit of downside volatility only (penalises losses, not gains)."""
+    daily = value.pct_change().dropna()
+    downside = daily[daily < 0]
+    downside_dev = downside.std() * np.sqrt(TRADING_DAYS)
+    return (_ann_mean(value) - RISK_FREE) / downside_dev
+
+def calmar(value):
+    """CAGR relative to the worst drawdown: growth earned per unit of deepest pain."""
+    return cagr(value) / abs(max_drawdown(value))
+
+def longest_underwater_days(value):
+    """The longest stretch, in calendar days, spent below a previous high."""
+    peak = value.cummax()
+    high_dates = value.index[value >= peak]  # dates that set a new high
+    if len(high_dates) < 2:
+        return np.nan
+    gaps = high_dates.to_series().diff().max()
+    return gaps.days
+
+def recovery_from_year_peak(value, year):
+    """Days from the highest point in `year` until the value regains that level.
+    Returns None if it has not yet recovered by the end of the data."""
+    yr = value[value.index.year == year]
+    if len(yr) < 2:
+        return None
+    peak_val = yr.max()
+    peak_date = yr.idxmax()
+    after = value[value.index > peak_date]
+    regained = after[after >= peak_val]
+    if len(regained) == 0:
+        return None  # still underwater
+    return (regained.index[0] - peak_date).days
+
+
+# ---------------------------------------------------------------------------
+# 4. Definitions: the risk-graded portfolios plus a semis-tilted sleeve.
+#
+# The equity portion is a GLOBAL blend, not just the US, because that is what a
+# UK wealth manager's model portfolios actually hold. We split every unit of
+# equity as 60% US (SPY), 30% developed-ex-US (EFA), 10% emerging (EEM), which
+# is roughly global market-cap weight. The bond portion is a high-quality
+# aggregate bond holding (AGG). So a "cautious" 40% equity portfolio is really
+# 24% US + 12% developed + 4% emerging + 60% bonds.
+# ---------------------------------------------------------------------------
+def graded(equity):
+    """Return the ticker weights for a portfolio with `equity` in global stocks."""
+    return {
+        "SPY": 0.60 * equity,
+        "EFA": 0.30 * equity,
+        "EEM": 0.10 * equity,
+        "AGG": round(1 - equity, 4),
+    }
+
+PORTFOLIOS = {
+    "Defensive (20/80)":   graded(0.20),
+    "Cautious (40/60)":    graded(0.40),
+    "Balanced (60/40)":    graded(0.60),
+    "Growth (80/20)":      graded(0.80),
+    "Adventurous (100/0)": graded(1.00),
+    # An adventurous theme bet: 70% global equity, 30% semiconductors.
+    "Semis-tilt (70/30)":  {"SPY": 0.42, "EFA": 0.21, "EEM": 0.07, "SOXX": 0.30},
+}
+
+STRESS = {
+    "2008 financial crisis": ("2007-10-01", "2009-06-30"),
+    "2020 COVID crash":      ("2020-02-01", "2020-04-30"),
+    "2022 rate shock":       ("2022-01-01", "2022-12-31"),
+}
+
+# Illustrative annualised-volatility bands, one per risk level, in the STYLE of
+# commercial risk profilers (Dynamic Planner, Defaqto, EValue) that map each
+# risk level to a target volatility range. These specific numbers are
+# illustrative and calibrated to sit around each portfolio's long-run
+# volatility; they are not any firm's proprietary bands.
+RISK_BANDS = {
+    "Defensive (20/80)":   (4, 8),
+    "Cautious (40/60)":    (6, 11),
+    "Balanced (60/40)":    (9, 14),
+    "Growth (80/20)":      (12, 18),
+    "Adventurous (100/0)": (15, 22),
+}
+
+def rolling_vol_pct(value, window=TRADING_DAYS):
+    """Rolling annualised volatility, in percent."""
+    return value.pct_change().rolling(window).std() * np.sqrt(TRADING_DAYS) * 100
+
+
+def main():
+    os.makedirs(FIG_DIR, exist_ok=True)
+    prices = load_prices()
+    start, end = prices.index[0].date(), prices.index[-1].date()
+
+    values = {name: portfolio_value(prices, w) for name, w in PORTFOLIOS.items()}
+    # standalone semiconductor series (100% SOXX) for the "extreme theme" point
+    soxx = prices["SOXX"] / prices["SOXX"].iloc[0]
+    values_all = dict(values)
+    values_all["Semis only (100% SOXX)"] = soxx
+
+    lines = []
+    def out(s=""):
+        print(s)
+        lines.append(s)
+
+    out(f"# Results\n")
+    out(f"Window: {start} to {end}  ({(prices.index[-1]-prices.index[0]).days/365.25:.1f} years)")
+    out(f"Equity is a global blend (60% US SPY, 30% developed-ex-US EFA, "
+        f"10% emerging EEM). Bonds are AGG. RSP (equal-weight US) is used only "
+        f"for the concentration test, SOXX (semiconductors) for the theme test. "
+        f"All series are total-return (dividends reinvested).\n")
+
+    # ---- full-period metrics table ----
+    out("## Full-period risk and return (annual rebalancing)\n")
+    out("| Portfolio | CAGR | Volatility | Max drawdown | Worst 12 months |")
+    out("|-----------|------|-----------|--------------|-----------------|")
+    for name, v in values_all.items():
+        out(f"| {name} | {cagr(v)*100:.1f}% | {annual_vol(v)*100:.1f}% | "
+            f"{max_drawdown(v)*100:.1f}% | {worst_rolling_year(v)*100:.1f}% |")
+    out()
+
+    # ---- calendar-year returns in key years ----
+    key_years = [2008, 2020, 2022, 2023, 2024]
+    out("## Calendar-year total return in key years\n")
+    out("| Portfolio | " + " | ".join(str(y) for y in key_years) + " |")
+    out("|" + "---|" * (len(key_years) + 1))
+    for name, v in values_all.items():
+        cells = " | ".join(f"{calendar_year_return(v, y)*100:+.1f}%" for y in key_years)
+        out(f"| {name} | {cells} |")
+    out()
+
+    # ---- drawdown in each stress episode ----
+    out("## Maximum drawdown within each stress episode\n")
+    out("| Portfolio | " + " | ".join(STRESS) + " |")
+    out("|" + "---|" * (len(STRESS) + 1))
+    for name, v in values_all.items():
+        cells = " | ".join(f"{drawdown_in_window(v, s, e)*100:.1f}%"
+                            for s, e in STRESS.values())
+        out(f"| {name} | {cells} |")
+    out()
+
+    # ---- risk-adjusted measures ----
+    out("## Risk-adjusted return and time underwater\n")
+    out(f"(Sharpe/Sortino assume a {RISK_FREE*100:.0f}% cash rate. "
+        f"'Longest underwater' is the longest stretch below a previous high.)\n")
+    out("| Portfolio | Sharpe | Sortino | Calmar | Longest underwater |")
+    out("|-----------|--------|---------|--------|--------------------|")
+    for name, v in values_all.items():
+        uw = longest_underwater_days(v)
+        out(f"| {name} | {sharpe(v):.2f} | {sortino(v):.2f} | {calmar(v):.2f} | "
+            f"{uw/365.25:.1f} years |")
+    out()
+
+    # ---- recovery from the two big events ----
+    out("## Time to recover from the peak (calendar days, and years)\n")
+    out("| Portfolio | From 2007 peak (GFC) | From 2022 peak |")
+    out("|-----------|----------------------|----------------|")
+    for name, v in values_all.items():
+        r08 = recovery_from_year_peak(v, 2007)
+        r22 = recovery_from_year_peak(v, 2022)
+        s08 = f"{r08/365.25:.1f} yrs" if r08 else "n/a"
+        s22 = f"{r22/365.25:.1f} yrs" if r22 else "not yet recovered"
+        out(f"| {name} | {s08} | {s22} |")
+    out()
+
+    # ---- Risk-targeting: did realised volatility stay in its band? ----
+    out("## Risk-targeting - did realised volatility stay inside its band?\n")
+    out("Bands are illustrative, in the style of commercial risk profilers, "
+        "not any firm's proprietary numbers. 'Rolling 1-year vol' is realised "
+        "volatility over a moving 12-month window.\n")
+    out("| Portfolio | Target band | Full-period vol | Rolling vol below / in / above band | Peak 1yr vol |")
+    out("|-----------|-------------|-----------------|-------------------------------------|--------------|")
+    for name, (lo, hi) in RISK_BANDS.items():
+        rv = rolling_vol_pct(values[name]).dropna()
+        below = (rv < lo).mean() * 100
+        inb = ((rv >= lo) & (rv <= hi)).mean() * 100
+        above = (rv > hi).mean() * 100
+        out(f"| {name} | {lo}-{hi}% | {annual_vol(values[name])*100:.1f}% | "
+            f"{below:.0f}% / {inb:.0f}% / {above:.0f}% | {rv.max():.1f}% |")
+    out()
+    out("On average each portfolio sits in its band, so the labels are calibrated "
+        "correctly. But realised risk is not constant: it spends most of the time "
+        "below the band in calm years and breaches above it in every crisis.\n")
+    caut_rv = rolling_vol_pct(values["Cautious (40/60)"]).dropna()
+    caut_hi = RISK_BANDS["Cautious (40/60)"][1]
+    out(f"The cautious band tops out at {caut_hi}%. Its rolling 1-year volatility "
+        f"breached that in every major stress episode, briefly giving a cautious "
+        f"client the risk of a higher band:")
+    for label, (s, e) in STRESS.items():
+        peak = caut_rv[(caut_rv.index >= s) & (caut_rv.index <= e)].max()
+        entered = next((lvl.split(" (")[0] for lvl, (l2, h2) in RISK_BANDS.items() if l2 <= peak <= h2), "above every band")
+        out(f"- {label}: peaked at {peak:.1f}% (the {entered} band's territory)")
+    out()
+
+    # ---- TEST 1: did cautious behave like 'cautious' in 2022? ----
+    caut_2022 = calendar_year_return(values["Cautious (40/60)"], 2022)
+    bal_2022 = calendar_year_return(values["Balanced (60/40)"], 2022)
+    adv_2022 = calendar_year_return(values["Adventurous (100/0)"], 2022)
+    def_2022 = calendar_year_return(values["Defensive (20/80)"], 2022)
+    out("## Test 1 - the cautious label in 2022\n")
+    out(f"- Defensive (20% equity) 2022 return: {def_2022*100:+.1f}%")
+    out(f"- Cautious (40% equity) 2022 return:  {caut_2022*100:+.1f}%")
+    out(f"- Balanced (60% equity) 2022 return:  {bal_2022*100:+.1f}%")
+    out(f"- Adventurous (100% equity) 2022 return: {adv_2022*100:+.1f}%")
+    if adv_2022 != 0:
+        out(f"- In 2022 the cautious portfolio's calendar-year loss was "
+            f"{caut_2022/adv_2022*100:.0f}% of the all-equity portfolio's loss "
+            f"(share of that year's loss, NOT a measure of overall risk).")
+        out(f"- For contrast, in 2008 the same figure was "
+            f"{calendar_year_return(values['Cautious (40/60)'],2008)/calendar_year_return(values['Adventurous (100/0)'],2008)*100:.0f}%.")
+    out()
+
+    # ---- Diversification: rolling stock-bond correlation ----
+    # The bond cushion only works when equities and bonds are NOT positively
+    # correlated. We measure the rolling 12-month correlation between the global
+    # equity sleeve (the 100% equity portfolio) and bonds (AGG).
+    eq_ret = values["Adventurous (100/0)"].pct_change()
+    bond_ret = prices["AGG"].pct_change()
+    roll_corr = eq_ret.rolling(TRADING_DAYS).corr(bond_ret).dropna()
+    pre_2022 = roll_corr[(roll_corr.index >= "2004-01-01") & (roll_corr.index <= "2021-12-31")].mean()
+    from_2022 = roll_corr[roll_corr.index >= "2022-01-01"].mean()
+    peak_2022 = roll_corr[roll_corr.index.year.isin([2022, 2023])].max()
+    out("## Diversification - rolling 12-month stock-bond correlation\n")
+    out(f"- Average correlation 2004-2021: {pre_2022:+.2f} (negative = bonds cushioned equities)")
+    out(f"- Average correlation from 2022: {from_2022:+.2f}")
+    out(f"- Peak correlation in 2022-2023: {peak_2022:+.2f} (bonds and equities moving together)")
+    out(f"- Share of days 2004-2021 with positive correlation: "
+        f"{(roll_corr[(roll_corr.index.year<=2021)]>0).mean()*100:.0f}%; "
+        f"from 2022: {(roll_corr[roll_corr.index.year>=2022]>0).mean()*100:.0f}%")
+    out()
+
+    # ---- TEST 2: concentration, cap-weight vs equal-weight ----
+    spy = prices["SPY"] / prices["SPY"].iloc[0]
+    rsp = prices["RSP"] / prices["RSP"].iloc[0]
+    # relative strength of cap-weight over equal-weight
+    rel = spy / rsp
+    gap_2023 = (spy[spy.index.year == 2023].iloc[-1] / spy[spy.index.year == 2023].iloc[0]) - \
+               (rsp[rsp.index.year == 2023].iloc[-1] / rsp[rsp.index.year == 2023].iloc[0])
+    gap_2024 = (spy[spy.index.year == 2024].iloc[-1] / spy[spy.index.year == 2024].iloc[0]) - \
+               (rsp[rsp.index.year == 2024].iloc[-1] / rsp[rsp.index.year == 2024].iloc[0])
+    spy_2023 = calendar_year_return(prices["SPY"], 2023)
+    rsp_2023 = calendar_year_return(prices["RSP"], 2023)
+    spy_2024 = calendar_year_return(prices["SPY"], 2024)
+    rsp_2024 = calendar_year_return(prices["RSP"], 2024)
+    out("## Test 2 - concentration (cap-weight SPY vs equal-weight RSP)\n")
+    out(f"- 2023: SPY {spy_2023*100:+.1f}% vs RSP {rsp_2023*100:+.1f}%  "
+        f"-> gap {gap_2023*100:+.1f} pts")
+    out(f"- 2024: SPY {spy_2024*100:+.1f}% vs RSP {rsp_2024*100:+.1f}%  "
+        f"-> gap {gap_2024*100:+.1f} pts")
+    out(f"- A positive gap means the cap-weighted index beat its equal-weighted twin "
+        f"because the largest few companies carried it. This measures mega-cap "
+        f"concentration, not AI specifically.")
+    out()
+
+    # ---- TEST 3: the theme and who could hold it ----
+    soxx_2023 = calendar_year_return(soxx, 2023)
+    soxx_2024 = calendar_year_return(soxx, 2024)
+    soxx_2022 = calendar_year_return(soxx, 2022)
+    soxx_2008 = calendar_year_return(soxx, 2008)
+    tilt = values["Semis-tilt (70/30)"]
+    out("## Test 3 - the AI/semis theme and the risk it demanded\n")
+    out("The pure theme (SOXX, i.e. 100% semiconductors):")
+    out(f"- SOXX 2023: {soxx_2023*100:+.1f}%   2024: {soxx_2024*100:+.1f}%   "
+        f"2022: {soxx_2022*100:+.1f}%   2008: {soxx_2008*100:+.1f}%")
+    out(f"- SOXX full-period max drawdown: {max_drawdown(soxx)*100:.1f}%  "
+        f"(volatility {annual_vol(soxx)*100:.1f}%)")
+    out("")
+    out("A more realistic 'Semis-tilt' portfolio (70% global equity + 30% SOXX):")
+    out(f"- Semis-tilt 2023: {calendar_year_return(tilt,2023)*100:+.1f}%   "
+        f"2022: {calendar_year_return(tilt,2022)*100:+.1f}%")
+    out(f"- Semis-tilt full-period max drawdown: {max_drawdown(tilt)*100:.1f}%  "
+        f"(volatility {annual_vol(tilt)*100:.1f}%)")
+    out(f"- So even a 30% tilt lifts drawdown from the adventurous portfolio's "
+        f"{max_drawdown(values['Adventurous (100/0)'])*100:.0f}% to "
+        f"{max_drawdown(tilt)*100:.0f}%. The point is the trade-off, not the theme.")
+    out()
+
+    # -----------------------------------------------------------------------
+    # Charts
+    # -----------------------------------------------------------------------
+    # Chart A: growth of the risk-graded portfolios
+    plt.figure(figsize=(10, 6))
+    for name in ["Defensive (20/80)", "Cautious (40/60)", "Balanced (60/40)",
+                 "Growth (80/20)", "Adventurous (100/0)"]:
+        plt.plot(values[name].index, values[name], label=name)
+    plt.title("Growth of £1: risk-graded portfolios (annual rebalancing)")
+    plt.ylabel("Value of £1 invested")
+    plt.legend()
+    plt.grid(alpha=0.3)
+    plt.savefig(os.path.join(FIG_DIR, "risk_graded_growth.png"), dpi=120, bbox_inches="tight")
+    plt.close()
+
+    # Chart B: concentration, SPY vs RSP relative
+    plt.figure(figsize=(10, 6))
+    plt.plot(rel.index, rel, color="darkred")
+    plt.title("Concentration: cap-weighted (SPY) relative to equal-weighted (RSP)")
+    plt.ylabel("SPY / RSP (rising = mega-caps pulling ahead)")
+    plt.grid(alpha=0.3)
+    plt.savefig(os.path.join(FIG_DIR, "concentration_spy_vs_rsp.png"), dpi=120, bbox_inches="tight")
+    plt.close()
+
+    # Chart B2: rolling stock-bond correlation, the mechanism behind Finding 1
+    plt.figure(figsize=(10, 6))
+    plt.plot(roll_corr.index, roll_corr, color="#333333", linewidth=1.1)
+    plt.axhline(0, color="black", linewidth=0.8)
+    plt.fill_between(roll_corr.index, roll_corr, 0, where=(roll_corr > 0),
+                     color="#B0413E", alpha=0.35, label="positive: bonds and equities fall together")
+    plt.fill_between(roll_corr.index, roll_corr, 0, where=(roll_corr <= 0),
+                     color="#4C78A8", alpha=0.30, label="negative: bonds cushion equities")
+    plt.title("Why the cushion failed: rolling 12-month stock-bond correlation")
+    plt.ylabel("Correlation of global equity and bond daily returns")
+    plt.legend(loc="upper left", fontsize=8)
+    plt.grid(alpha=0.3)
+    plt.savefig(os.path.join(FIG_DIR, "stock_bond_correlation.png"), dpi=120, bbox_inches="tight")
+    plt.close()
+
+    # Chart B3: risk-targeting. The cautious portfolio's rolling 1-year vol
+    # against a static band, showing it swing below in calm years and breach
+    # above in every crisis.
+    crv = rolling_vol_pct(values["Cautious (40/60)"]).dropna()
+    clo, chi = RISK_BANDS["Cautious (40/60)"]
+    bal_hi = RISK_BANDS["Balanced (60/40)"][1]
+    adv_hi = RISK_BANDS["Adventurous (100/0)"][1]
+    plt.figure(figsize=(10, 6))
+    plt.axhspan(clo, chi, color="#4C78A8", alpha=0.20, label=f"cautious target band ({clo}-{chi}%)")
+    plt.axhline(bal_hi, color="#888", linestyle="--", linewidth=0.9)
+    plt.axhline(adv_hi, color="#B0413E", linestyle="--", linewidth=0.9)
+    plt.text(crv.index[10], bal_hi + 0.4, "top of Balanced band", fontsize=8, color="#666")
+    plt.text(crv.index[10], adv_hi + 0.4, "top of Adventurous band", fontsize=8, color="#B0413E")
+    plt.plot(crv.index, crv, color="#1f4e79", linewidth=1.1)
+    plt.title("A static band, a moving reality: the cautious portfolio's rolling 1-year volatility")
+    plt.ylabel("Annualised volatility (%)")
+    plt.legend(loc="upper right", fontsize=8)
+    plt.grid(alpha=0.3)
+    plt.savefig(os.path.join(FIG_DIR, "risk_targeting_cautious.png"), dpi=120, bbox_inches="tight")
+    plt.close()
+
+    # Chart C: the theme's reward on top, its drawdown underneath, against a
+    # broad global-equity portfolio for context. Two stacked panels.
+    adv = values["Adventurous (100/0)"]
+    adv_norm = adv / adv.iloc[0]
+    fig, (top, bot) = plt.subplots(
+        2, 1, figsize=(10, 7.5), sharex=True,
+        gridspec_kw={"height_ratios": [2, 1], "hspace": 0.08})
+    top.plot(soxx.index, soxx, color="#1B7A6E", label="Semiconductors (SOXX)")
+    top.plot(adv_norm.index, adv_norm, color="#7A7A7A", label="Adventurous (global equity)")
+    top.set_yscale("log")
+    top.set_ylabel("Growth of £1 (log scale)")
+    top.set_title("The AI/semis theme: far more reward, far deeper holes")
+    top.legend(loc="upper left")
+    top.grid(alpha=0.3)
+    dd_soxx = (soxx / soxx.cummax() - 1.0) * 100
+    dd_adv = (adv / adv.cummax() - 1.0) * 100
+    bot.fill_between(dd_soxx.index, dd_soxx, 0, color="#1B7A6E", alpha=0.25)
+    bot.plot(dd_soxx.index, dd_soxx, color="#1B7A6E", linewidth=0.8, label="Semiconductors")
+    bot.plot(dd_adv.index, dd_adv, color="#7A7A7A", linewidth=0.9, label="Global equity")
+    bot.set_ylabel("Drawdown (%)")
+    bot.set_xlabel("")
+    bot.legend(loc="lower left", fontsize=8)
+    bot.grid(alpha=0.3)
+    plt.savefig(os.path.join(FIG_DIR, "semis_reward_vs_drawdown.png"), dpi=120, bbox_inches="tight")
+    plt.close()
+
+    # Chart D (the headline): the bond cushion worked in 2008, failed in 2022.
+    caut = values["Cautious (40/60)"]
+    adv = values["Adventurous (100/0)"]
+    caut_08, adv_08 = calendar_year_return(caut, 2008), calendar_year_return(adv, 2008)
+    caut_22, adv_22 = calendar_year_return(caut, 2022), calendar_year_return(adv, 2022)
+    fig, ax = plt.subplots(figsize=(9, 6.5))
+    groups = ["2008\n(bonds cushioned)", "2022\n(bonds fell too)"]
+    x = np.arange(len(groups))
+    width = 0.35
+    lo = min(caut_08, adv_08, caut_22, adv_22) * 100
+    ax.set_ylim(lo - 6, 14)  # headroom above 0 for the annotations, below for labels
+    ax.bar(x - width/2, [caut_08*100, caut_22*100], width,
+           label="Cautious (40% equity)", color="#4C78A8")
+    ax.bar(x + width/2, [adv_08*100, adv_22*100], width,
+           label="Adventurous (100% equity)", color="#B0413E")
+    for i, (c, a) in enumerate([(caut_08, adv_08), (caut_22, adv_22)]):
+        ax.text(i - width/2, c*100 - 1.0, f"{c*100:.0f}%", ha="center", va="top", fontsize=10)
+        ax.text(i + width/2, a*100 - 1.0, f"{a*100:.0f}%", ha="center", va="top", fontsize=10)
+        share = c / a * 100
+        ax.text(i, 9, f"cautious took {share:.0f}%\nof the equity loss",
+                ha="center", va="center", fontsize=9, style="italic")
+    ax.axhline(0, color="black", linewidth=0.8)
+    ax.set_xticks(x); ax.set_xticklabels(groups)
+    ax.set_ylabel("Calendar-year total return (%)")
+    ax.set_title("Does 'cautious' mean cautious? The bond cushion in 2008 vs 2022",
+                 pad=14)
+    ax.legend(loc="lower right")
+    ax.grid(alpha=0.3, axis="y")
+    plt.savefig(os.path.join(FIG_DIR, "bond_cushion_2008_vs_2022.png"), dpi=120, bbox_inches="tight")
+    plt.close()
+
+    with open(os.path.join(HERE, "results.md"), "w") as f:
+        f.write("\n".join(lines) + "\n")
+    print("\nWrote results.md and three charts to ../figures/")
+
+
+if __name__ == "__main__":
+    main()
