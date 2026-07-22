@@ -268,6 +268,25 @@ def main():
             f"{calendar_year_return(values['Cautious (40/60)'],2008)/calendar_year_return(values['Adventurous (100/0)'],2008)*100:.0f}%.")
     out()
 
+    # ---- Diversification: rolling stock-bond correlation ----
+    # The bond cushion only works when equities and bonds are NOT positively
+    # correlated. We measure the rolling 12-month correlation between the global
+    # equity sleeve (the 100% equity portfolio) and bonds (AGG).
+    eq_ret = values["Adventurous (100/0)"].pct_change()
+    bond_ret = prices["AGG"].pct_change()
+    roll_corr = eq_ret.rolling(TRADING_DAYS).corr(bond_ret).dropna()
+    pre_2022 = roll_corr[(roll_corr.index >= "2004-01-01") & (roll_corr.index <= "2021-12-31")].mean()
+    from_2022 = roll_corr[roll_corr.index >= "2022-01-01"].mean()
+    peak_2022 = roll_corr[roll_corr.index.year.isin([2022, 2023])].max()
+    out("## Diversification - rolling 12-month stock-bond correlation\n")
+    out(f"- Average correlation 2004-2021: {pre_2022:+.2f} (negative = bonds cushioned equities)")
+    out(f"- Average correlation from 2022: {from_2022:+.2f}")
+    out(f"- Peak correlation in 2022-2023: {peak_2022:+.2f} (bonds and equities moving together)")
+    out(f"- Share of days 2004-2021 with positive correlation: "
+        f"{(roll_corr[(roll_corr.index.year<=2021)]>0).mean()*100:.0f}%; "
+        f"from 2022: {(roll_corr[roll_corr.index.year>=2022]>0).mean()*100:.0f}%")
+    out()
+
     # ---- TEST 2: concentration, cap-weight vs equal-weight ----
     spy = prices["SPY"] / prices["SPY"].iloc[0]
     rsp = prices["RSP"] / prices["RSP"].iloc[0]
@@ -336,6 +355,21 @@ def main():
     plt.ylabel("SPY / RSP (rising = mega-caps pulling ahead)")
     plt.grid(alpha=0.3)
     plt.savefig(os.path.join(FIG_DIR, "concentration_spy_vs_rsp.png"), dpi=120, bbox_inches="tight")
+    plt.close()
+
+    # Chart B2: rolling stock-bond correlation, the mechanism behind Finding 1
+    plt.figure(figsize=(10, 6))
+    plt.plot(roll_corr.index, roll_corr, color="#333333", linewidth=1.1)
+    plt.axhline(0, color="black", linewidth=0.8)
+    plt.fill_between(roll_corr.index, roll_corr, 0, where=(roll_corr > 0),
+                     color="#B0413E", alpha=0.35, label="positive: bonds and equities fall together")
+    plt.fill_between(roll_corr.index, roll_corr, 0, where=(roll_corr <= 0),
+                     color="#4C78A8", alpha=0.30, label="negative: bonds cushion equities")
+    plt.title("Why the cushion failed: rolling 12-month stock-bond correlation")
+    plt.ylabel("Correlation of global equity and bond daily returns")
+    plt.legend(loc="upper left", fontsize=8)
+    plt.grid(alpha=0.3)
+    plt.savefig(os.path.join(FIG_DIR, "stock_bond_correlation.png"), dpi=120, bbox_inches="tight")
     plt.close()
 
     # Chart C: the theme's reward on top, its drawdown underneath, against a

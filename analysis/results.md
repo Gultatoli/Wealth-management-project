@@ -74,6 +74,13 @@ Equity is a global blend (60% US SPY, 30% developed-ex-US EFA, 10% emerging EEM)
 - In 2022 the cautious portfolio's calendar-year loss was 82% of the all-equity portfolio's loss (share of that year's loss, NOT a measure of overall risk).
 - For contrast, in 2008 the same figure was 29%.
 
+## Diversification - rolling 12-month stock-bond correlation
+
+- Average correlation 2004-2021: -0.14 (negative = bonds cushioned equities)
+- Average correlation from 2022: +0.23
+- Peak correlation in 2022-2023: +0.40 (bonds and equities moving together)
+- Share of days 2004-2021 with positive correlation: 33%; from 2022: 96%
+
 ## Test 2 - concentration (cap-weight SPY vs equal-weight RSP)
 
 - 2023: SPY +26.7% vs RSP +13.8%  -> gap +12.9 pts

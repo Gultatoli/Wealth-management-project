@@ -70,6 +70,10 @@ A cautious client who cares less about the size of a drawdown than about how lon
 
 ![The bond cushion in 2008 vs 2022](figures/bond_cushion_2008_vs_2022.png)
 
+**Why it happened: the diversification itself broke down.** The cushion depends on bonds and equities not moving together. For most of 2004 to 2021 they did not. The rolling 12-month correlation of their daily returns averaged −0.14 and was negative about two-thirds of the time, so bonds tended to hold up when equities fell. From 2022 that flipped. The correlation averaged +0.23, peaked near +0.40, and was positive on 96% of days. Bonds and equities began falling together, which is exactly why a bond-heavy cautious portfolio had nowhere to hide. This is the specific, measurable reason behind the 2022 result, not a general appeal to "an unusual year."
+
+![Rolling stock-bond correlation](figures/stock_bond_correlation.png)
+
 ### Finding 2: a balanced portfolio's equity became concentrated in US mega-cap technology
 
 Because standard equity indices weight companies by size, a handful of very large winners can come to dominate the index and quietly raise every holder's concentration, with no risk label changing.
@@ -134,7 +138,7 @@ So a "cautious" 40% equity portfolio is really 24% US, 12% developed-ex-US, 4% e
 
 **Data.** Free total-return series (dividends reinvested) from Yahoo Finance: SPY (US equity), EFA (developed ex-US), EEM (emerging), AGG (US aggregate bonds), plus RSP (equal-weighted US) for the concentration test and SOXX (semiconductors) for the theme test. The common window, October 2003 to July 2026, covers the 2008 crisis, the 2020 COVID crash, the 2022 rate shock, and the 2023 to 2025 AI boom.
 
-**Measures.** CAGR, annualised volatility, maximum drawdown, worst rolling 12-month return, calendar-year returns, Sharpe, Sortino, Calmar, and time spent below a previous high.
+**Measures.** CAGR, annualised volatility, maximum drawdown, worst rolling 12-month return, calendar-year returns, Sharpe, Sortino, Calmar, time spent below a previous high, and the rolling 12-month correlation between equities and bonds.
 
 ## Limitations
 
