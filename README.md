@@ -20,11 +20,11 @@ Two things follow. "Cautious" was still genuinely less risky than "adventurous" 
 
 A single word like "cautious" collapses several separate ideas that a suitability process is supposed to keep apart:
 
-- **Risk tolerance** — how much loss the client can emotionally sit through.
-- **Capacity for loss** — how much loss the client can financially afford.
-- **Time horizon** — how long the money can stay invested.
-- **Risk requirement** — how much risk the client actually needs to meet their goals.
-- **Portfolio risk** — the risk actually embedded in the holdings, which changes with markets.
+- **Risk tolerance:** how much loss the client can emotionally sit through.
+- **Capacity for loss:** how much loss the client can financially afford.
+- **Time horizon:** how long the money can stay invested.
+- **Risk requirement:** how much risk the client actually needs to meet their goals.
+- **Portfolio risk:** the risk actually embedded in the holdings, which changes with markets.
 
 The label mainly speaks to the last one, and only as a static ranking. This analysis shows where that gap between a fixed label and a moving reality matters.
 
@@ -42,7 +42,7 @@ Across the full period the portfolios line up exactly as their labels promise. M
 | Growth (80%) | 8.4% | 15.0% | −47.7% | −41.0% |
 | Adventurous (100%) | 9.5% | 19.2% | −58.1% | −51.0% |
 
-A cautious portfolio really was far less risky than an all-equity one: a third of the volatility, and less than half the worst drawdown. Keep that in mind through the next section, because it is the honest counterweight to it.
+A cautious portfolio really was far less risky than an all-equity one: about a third of the volatility, and less than half the worst drawdown. Hold onto that through the next section. It is the honest counterweight to what follows.
 
 ### Finding 1: in 2022 the bond cushion gave far less protection than the label implies
 
@@ -81,7 +81,7 @@ You can see the effect by comparing the normal cap-weighted S&P 500 (SPY) with i
 
 The cap-weighted index nearly doubled the equal-weighted one two years running. That is a large, unusual concentration into the biggest companies, most of which were the major beneficiaries of the AI investment cycle.
 
-Two honest boundaries on this claim. This measures concentration into *mega-cap companies*, not into "AI" as such: proving an AI-specific bet would need a holdings-level breakdown of how much of the index those companies represent and how much of the return came from them, which needs constituent data this project does not use. And the suitability point stands regardless of the label you put on the cause: a "balanced" client in 2025 holds a materially more concentrated equity exposure than a "balanced" client in 2019, and nobody re-profiled them.
+Two honest boundaries on this claim. First, this measures concentration into the *largest companies*, not into "AI" as such. To prove an AI-specific bet you would need to know how much of the index those companies make up and how much of the return came from them. That takes holdings data this project does not use. Second, the suitability point holds whatever you call the cause. A "balanced" client in 2025 owns a much more concentrated equity exposure than a "balanced" client in 2019, and nobody re-profiled them in between.
 
 ![Concentration: SPY vs RSP](figures/concentration_spy_vs_rsp.png)
 
@@ -141,7 +141,7 @@ So a "cautious" 40% equity portfolio is really 24% US, 12% developed-ex-US, 4% e
 What this project does **not** prove. This section is deliberately long, because the boundaries are the point.
 
 - **Simplified portfolios.** Two- and three-asset allocations from broad indices, not any firm's real model portfolios, which hold more asset classes and are actively managed.
-- **Bonds and currency are a US proxy, so the UK conclusion is a caveat, not a result.** The bond side uses US aggregate bonds, and everything is in US dollars. A real UK portfolio might hold gilts, global bonds, credit, short-duration or hedged bonds, and cash, and currency hedging alone can change bond returns substantially. UK gilts are widely reported to have had a record fall in 2022, which suggests the direction of the 2022 finding would hold for a UK investor, but this project does not model a UK bond allocation and the result should not be read as the precise UK experience.
+- **Bonds and currency are a US proxy, so the UK conclusion is a caveat, not a result.** The bond side uses US aggregate bonds, and everything is priced in US dollars. A real UK portfolio might hold gilts, global bonds, credit, short-duration or hedged bonds, and cash. Currency hedging alone can move bond returns a long way. UK gilts are widely reported to have had a record fall in 2022, so the direction of the 2022 finding probably holds for a UK investor too. But this project does not model a UK bond allocation, so read the numbers as illustrative, not as the precise UK experience.
 - **Concentration is measured, AI attribution is not.** Finding 2 demonstrates mega-cap concentration through the cap-weighted versus equal-weighted gap. It does not prove an AI-specific bet; that would need a holdings-level decomposition of index weights and return contribution, which is the natural next step.
 - **No fees or tax.** Platform charges, fund costs, and ISA or pension wrappers are not modelled, and all of them matter to a real client.
 - **Volatility and drawdown are imperfect stand-ins for risk.** A client's real risk is whether they meet their goals and can hold the path. These statistics do not capture capacity for loss or behaviour under stress.
