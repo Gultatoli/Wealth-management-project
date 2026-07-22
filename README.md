@@ -117,9 +117,33 @@ Judging the portfolios by return per unit of risk, rather than raw return, adds 
 
 (Sharpe and Sortino assume a 2% cash rate; the exact figure does not change the ranking.)
 
+### Finding 4: the range of outcomes, and why "cautious" can be the wrong answer
+
+The findings so far look backward. A wealth manager also has to look forward, and the standard tool for that is Monte Carlo: run the portfolio through thousands of simulated futures and read off the range of results. The usual version assumes returns are bell-shaped and independent, which understates crashes and ignores the correlation shift documented above. So instead of drawing from a bell curve, this simulation resamples real history in six-month blocks, keeping true crashes, fat tails, and the real joint behaviour of the assets. Ten thousand paths, thirty years.
+
+**Accumulation: a label is a point, but the outcome is a wide distribution.** Growing a single pound for thirty years, the "balanced" portfolio has a median result near £8, but the range runs from about £3.20 to £19.10 between the 5th and 95th percentile. Two clients in the same "balanced" model, retiring a few years apart, can end up with very different amounts through nothing but the luck of timing. More risk widens the cone sharply: the adventurous portfolio's median is higher again, and so is the gap between a good and a bad outcome.
+
+![Accumulation fan](figures/mc_accumulation_fan.png)
+
+**Decumulation: the most cautious portfolio was the least likely to last.** Now run it the other way. A retiree starts with £500,000 and draws 4% a year, rising with inflation, for thirty years. The question is how often the money survives.
+
+| Portfolio | Probability the pot lasts 30 years |
+|-----------|------------------------------------|
+| Defensive (20% equity) | 75% |
+| Cautious (40%) | 89% |
+| Balanced (60%) | 92% |
+| Growth (80%) | 92% |
+| Adventurous (100%) | 91% |
+
+The safest-sounding portfolio was the least safe for this client. A defensive allocation grows too slowly to outrun inflation across a thirty-year drawdown, so it ran out in a quarter of the simulated futures. The sweet spot sat around balanced to growth. This is the sharpest version of the project's whole point: a static risk label, matched to a nervous client, can be actively unsuitable. For someone drawing an income, "cautious" is not automatically prudent.
+
+![Decumulation survival](figures/mc_decumulation_survival.png)
+
+The honest limitation stays in view. A bootstrap reuses the 2003 to 2026 sample, so it captures the crashes that happened but cannot invent a future worse than anything in the record. It is a stress test against history, not a forecast.
+
 ## Headline result
 
-Over almost 23 years, the risk labels ranked risk correctly, but in 2022 a "cautious" portfolio produced **82% of the all-equity portfolio's loss for the year** (against 29% in 2008) once bonds stopped diversifying, and then spent **longer underwater than the aggressive portfolios** because its bond ballast stayed depressed while equities rallied. Meanwhile a plain equity holding grew far more concentrated in a few mega-caps, so a "balanced" label in 2025 covers a different exposure than it did in 2019. A static label ranks risk well but cannot communicate the full distribution of outcomes, nor keep a client's suitability current as markets move.
+Over almost 23 years, the risk labels ranked risk correctly, but in 2022 a "cautious" portfolio produced **82% of the all-equity portfolio's loss for the year** (against 29% in 2008) once bonds stopped diversifying, and then spent **longer underwater than the aggressive portfolios** because its bond ballast stayed depressed while equities rallied. Meanwhile a plain equity holding grew far more concentrated in a few mega-caps, so a "balanced" label in 2025 covers a different exposure than it did in 2019. And a forward-looking simulation drives the point home: for a retiree drawing an income, the most cautious portfolio was the *least* likely to last, running out in a quarter of simulated futures where a balanced one survived over 90% of the time. A static label ranks risk well but cannot communicate the full distribution of outcomes, nor keep a client's suitability current as markets move.
 
 ## Method
 
@@ -150,6 +174,7 @@ What this project does **not** prove. This section is deliberately long, because
 - **No fees or tax.** Platform charges, fund costs, and ISA or pension wrappers are not modelled, and all of them matter to a real client.
 - **Volatility and drawdown are imperfect stand-ins for risk.** A client's real risk is whether they meet their goals and can hold the path. These statistics do not capture capacity for loss or behaviour under stress.
 - **The past is not a forecast.** Every finding is descriptive. That the theme rewarded a high-tolerance client from 2023 to 2025 says nothing about the next five years.
+- **The Monte Carlo is a stress test against history, not a crystal ball.** The block bootstrap reuses the 2003 to 2026 sample, so it reflects the crashes that happened but cannot represent a future worse than anything on record. It also uses fixed withdrawal, inflation, and rebalancing assumptions, all stated in the code and all changeable.
 - **Annual rebalancing is a modelling choice.** A different rule would move the numbers, though not the story.
 
 ## Reproducing the analysis
@@ -158,7 +183,8 @@ What this project does **not** prove. This section is deliberately long, because
 pip install -r requirements.txt
 cd analysis
 python3 fetch_data.py     # downloads the data into ../data/
-python3 analyse.py        # prints the results, writes results.md and ../figures/
+python3 analyse.py        # the historical analysis: results.md and most figures
+python3 monte_carlo.py    # the forward-looking simulation and its figures
 ```
 
 Every number in this README comes from `analysis/analyse.py`, and the full printout is saved in `analysis/results.md`.
