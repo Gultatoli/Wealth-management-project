@@ -28,11 +28,11 @@ Across the full period, the portfolios line up exactly as their labels promise. 
 
 | Portfolio | CAGR | Volatility | Max drawdown | Worst 12 months |
 |-----------|------|-----------|--------------|-----------------|
-| Defensive (20% equity) | 4.8% | 5.4% | −17.5% | −16.4% |
-| Cautious (40%) | 6.5% | 7.7% | −22.0% | −21.7% |
-| Balanced (60%) | 8.0% | 10.9% | −34.5% | −29.1% |
-| Growth (80%) | 9.5% | 14.5% | −45.9% | −39.3% |
-| Adventurous (100%) | 10.8% | 18.5% | −56.1% | −48.9% |
+| Defensive (20% equity) | 4.6% | 5.5% | −18.1% | −16.9% |
+| Cautious (40%) | 6.0% | 7.9% | −23.6% | −22.9% |
+| Balanced (60%) | 7.3% | 11.2% | −36.2% | −31.0% |
+| Growth (80%) | 8.4% | 15.0% | −47.7% | −41.0% |
+| Adventurous (100%) | 9.5% | 19.2% | −58.1% | −51.0% |
 
 So far the labels are doing their job. The interesting part is where they stop.
 
@@ -44,10 +44,12 @@ The result: the cautious portfolio, with only 40% in equities, lost almost as mu
 
 | Year | Cautious (40% equity) | Adventurous (100%) | Cautious loss as share of all-equity loss |
 |------|----------------------|--------------------|-------------------------------------------|
-| **2008** | −10.1% | −36.2% | **28%** (bonds cushioned) |
-| **2022** | −14.9% | −18.6% | **80%** (bonds fell too) |
+| **2008** | −11.1% | −38.8% | **29%** (bonds cushioned) |
+| **2022** | −14.6% | −17.8% | **82%** (bonds fell too) |
 
-In 2008 the bond cushion worked exactly as a cautious client would expect: they took roughly a quarter of the pain the aggressive investor took. In 2022 they took four fifths of it. Same label, same 40% equity, completely different experience. A client anchored to the word "cautious" was not prepared for 2022, and the label gave them no warning.
+In 2008 the bond cushion worked exactly as a cautious client would expect: they took under a third of the pain the aggressive investor took. In 2022 they took more than four fifths of it. Same label, same 40% equity, completely different experience. A client anchored to the word "cautious" was not prepared for 2022, and the label gave them no warning.
+
+This holds up two ways. It survives using a globally diversified equity mix rather than the US alone (I tested both, and the ratios barely move). And it is if anything conservative for a UK client: UK government bonds had their worst year on record in 2022, falling harder than the US bonds used here, so a UK cautious portfolio would have breached its label by more, not less.
 
 ![The bond cushion in 2008 vs 2022](figures/bond_cushion_2008_vs_2022.png)
 
@@ -76,22 +78,24 @@ That is the real lesson, and it is a suitability lesson, not a stock tip. The th
 
 ## Headline result
 
-Over almost 23 years, a "cautious" model portfolio took **80% of the all-equity loss in 2022** once its bond cushion failed, against just **28% in 2008** when the cushion worked. The risk label stayed the same while the risk underneath it changed completely. The same period shows the AI/semiconductor theme returning **69% in 2023** but demanding a **67% drawdown** to hold, which only a suitably profiled client could bear.
+Over almost 23 years, a "cautious" model portfolio took **82% of the all-equity loss in 2022** once its bond cushion failed, against just **29% in 2008** when the cushion worked. The risk label stayed the same while the risk underneath it changed completely. The same period shows the AI/semiconductor theme returning **69% in 2023** but demanding a **67% drawdown** to hold, which only a suitably profiled client could bear.
 
 ## Method
 
-**Portfolios.** Five risk-graded portfolios defined by equity weight, rebalanced to target every year, plus one semiconductor-tilted sleeve to represent a theme bet a suitably adventurous client might hold.
+**Portfolios.** Five risk-graded portfolios defined by equity weight, rebalanced to target every year, plus one semiconductor-tilted sleeve to represent a theme bet a suitably adventurous client might hold. The equity portion is a **global blend**, not the US alone, because that is what a UK wealth manager's model portfolios actually hold: every unit of equity is split 60% US, 30% developed markets outside the US, and 10% emerging markets, roughly global market-cap weight.
 
-| Portfolio | Equity | Bonds |
-|-----------|--------|-------|
-| Defensive | 20% (SPY) | 80% (AGG) |
+| Portfolio | Equity (global blend) | Bonds |
+|-----------|-----------------------|-------|
+| Defensive | 20% | 80% |
 | Cautious | 40% | 60% |
 | Balanced | 60% | 40% |
 | Growth | 80% | 20% |
 | Adventurous | 100% | 0% |
-| Semis-tilt | 70% SPY + 30% SOXX | 0% |
+| Semis-tilt | 70% global equity + 30% semis | 0% |
 
-**Data.** Free total-return series (dividends reinvested) from Yahoo Finance: SPY (cap-weighted US equity), RSP (equal-weighted US equity, for the concentration test), AGG (US aggregate bonds), SOXX (semiconductors). The common window is October 2003 to July 2026, set by the youngest series. It covers the 2008 crisis, the 2020 COVID crash, the 2022 rate shock, and the 2023 to 2025 AI boom.
+So a "cautious" 40% equity portfolio is really 24% US, 12% developed-ex-US, 4% emerging, and 60% bonds. This is still a simplification of a real model portfolio, but a fair one: the equity/bond bands match how risk-graded portfolios are structured, and the equity is genuinely global.
+
+**Data.** Free total-return series (dividends reinvested) from Yahoo Finance: SPY (US equity), EFA (developed markets ex-US), EEM (emerging markets), AGG (US aggregate bonds), plus RSP (equal-weighted US equity) for the concentration test and SOXX (semiconductors) for the theme test. The common window is October 2003 to July 2026, set by the youngest series. It covers the 2008 crisis, the 2020 COVID crash, the 2022 rate shock, and the 2023 to 2025 AI boom.
 
 **Risk measures.** Annualised volatility, maximum drawdown, worst rolling 12-month return, and calendar-year returns, computed per portfolio and within each stress episode.
 
@@ -101,7 +105,7 @@ What this project does **not** prove. This section is deliberately long, because
 
 - **Index proxies, not real portfolios.** These are simplified two- and three-asset allocations built from broad indices, not any firm's actual model portfolios, which hold more asset classes and are actively managed.
 - **No fees, no tax.** Platform charges, fund costs, and ISA or pension wrappers are not modelled. All of them matter to a real client.
-- **US data.** The longest clean histories are US series. A UK client holds globally and in sterling, and currency effects are not modelled. Global indices are heavily US-weighted, so the concentration finding still travels, but this is a real simplification.
+- **Bonds and currency.** The equity side is global, but the bond side uses US aggregate bonds, where a UK portfolio would hold gilts and global bonds. Everything is measured in US dollars, so the sterling experience of a UK investor, including currency moves, is not modelled. As noted above, using UK gilts would deepen the 2022 finding rather than soften it.
 - **Volatility and drawdown are imperfect stand-ins for risk.** A client's real risk is whether they meet their goals and can stomach the path. These statistics do not capture capacity for loss or behaviour under stress.
 - **The past is not a forecast.** Every finding here is descriptive. That the theme rewarded a high-tolerance client from 2023 to 2025 says nothing about the next five years.
 - **Annual rebalancing is a modelling choice.** A different rule would change the numbers, though not the story.
