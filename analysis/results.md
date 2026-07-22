@@ -65,6 +65,25 @@ Equity is a global blend (60% US SPY, 30% developed-ex-US EFA, 10% emerging EEM)
 | Semis-tilt (70/30) | 5.9 yrs | 1.9 yrs |
 | Semis only (100% SOXX) | 6.2 yrs | 1.9 yrs |
 
+## Risk-targeting - did realised volatility stay inside its band?
+
+Bands are illustrative, in the style of commercial risk profilers, not any firm's proprietary numbers. 'Rolling 1-year vol' is realised volatility over a moving 12-month window.
+
+| Portfolio | Target band | Full-period vol | Rolling vol below / in / above band | Peak 1yr vol |
+|-----------|-------------|-----------------|-------------------------------------|--------------|
+| Defensive (20/80) | 4-8% | 5.5% | 51% / 36% / 13% | 13.4% |
+| Cautious (40/60) | 6-11% | 7.9% | 45% / 43% / 12% | 18.7% |
+| Balanced (60/40) | 9-14% | 11.2% | 53% / 34% / 13% | 26.7% |
+| Growth (80/20) | 12-18% | 15.0% | 53% / 31% / 16% | 36.8% |
+| Adventurous (100/0) | 15-22% | 19.2% | 52% / 31% / 17% | 49.4% |
+
+On average each portfolio sits in its band, so the labels are calibrated correctly. But realised risk is not constant: it spends most of the time below the band in calm years and breaches above it in every crisis.
+
+The cautious band tops out at 11%. Its rolling 1-year volatility breached that in every major stress episode, briefly giving a cautious client the risk of a higher band:
+- 2008 financial crisis: peaked at 18.6% (the Adventurous band's territory)
+- 2020 COVID crash: peaked at 12.7% (the Balanced band's territory)
+- 2022 rate shock: peaked at 11.2% (the Balanced band's territory)
+
 ## Test 1 - the cautious label in 2022
 
 - Defensive (20% equity) 2022 return: -13.5%

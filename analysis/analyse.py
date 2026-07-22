@@ -173,6 +173,23 @@ STRESS = {
     "2022 rate shock":       ("2022-01-01", "2022-12-31"),
 }
 
+# Illustrative annualised-volatility bands, one per risk level, in the STYLE of
+# commercial risk profilers (Dynamic Planner, Defaqto, EValue) that map each
+# risk level to a target volatility range. These specific numbers are
+# illustrative and calibrated to sit around each portfolio's long-run
+# volatility; they are not any firm's proprietary bands.
+RISK_BANDS = {
+    "Defensive (20/80)":   (4, 8),
+    "Cautious (40/60)":    (6, 11),
+    "Balanced (60/40)":    (9, 14),
+    "Growth (80/20)":      (12, 18),
+    "Adventurous (100/0)": (15, 22),
+}
+
+def rolling_vol_pct(value, window=TRADING_DAYS):
+    """Rolling annualised volatility, in percent."""
+    return value.pct_change().rolling(window).std() * np.sqrt(TRADING_DAYS) * 100
+
 
 def main():
     os.makedirs(FIG_DIR, exist_ok=True)
@@ -248,6 +265,35 @@ def main():
         s08 = f"{r08/365.25:.1f} yrs" if r08 else "n/a"
         s22 = f"{r22/365.25:.1f} yrs" if r22 else "not yet recovered"
         out(f"| {name} | {s08} | {s22} |")
+    out()
+
+    # ---- Risk-targeting: did realised volatility stay in its band? ----
+    out("## Risk-targeting - did realised volatility stay inside its band?\n")
+    out("Bands are illustrative, in the style of commercial risk profilers, "
+        "not any firm's proprietary numbers. 'Rolling 1-year vol' is realised "
+        "volatility over a moving 12-month window.\n")
+    out("| Portfolio | Target band | Full-period vol | Rolling vol below / in / above band | Peak 1yr vol |")
+    out("|-----------|-------------|-----------------|-------------------------------------|--------------|")
+    for name, (lo, hi) in RISK_BANDS.items():
+        rv = rolling_vol_pct(values[name]).dropna()
+        below = (rv < lo).mean() * 100
+        inb = ((rv >= lo) & (rv <= hi)).mean() * 100
+        above = (rv > hi).mean() * 100
+        out(f"| {name} | {lo}-{hi}% | {annual_vol(values[name])*100:.1f}% | "
+            f"{below:.0f}% / {inb:.0f}% / {above:.0f}% | {rv.max():.1f}% |")
+    out()
+    out("On average each portfolio sits in its band, so the labels are calibrated "
+        "correctly. But realised risk is not constant: it spends most of the time "
+        "below the band in calm years and breaches above it in every crisis.\n")
+    caut_rv = rolling_vol_pct(values["Cautious (40/60)"]).dropna()
+    caut_hi = RISK_BANDS["Cautious (40/60)"][1]
+    out(f"The cautious band tops out at {caut_hi}%. Its rolling 1-year volatility "
+        f"breached that in every major stress episode, briefly giving a cautious "
+        f"client the risk of a higher band:")
+    for label, (s, e) in STRESS.items():
+        peak = caut_rv[(caut_rv.index >= s) & (caut_rv.index <= e)].max()
+        entered = next((lvl.split(" (")[0] for lvl, (l2, h2) in RISK_BANDS.items() if l2 <= peak <= h2), "above every band")
+        out(f"- {label}: peaked at {peak:.1f}% (the {entered} band's territory)")
     out()
 
     # ---- TEST 1: did cautious behave like 'cautious' in 2022? ----
@@ -370,6 +416,27 @@ def main():
     plt.legend(loc="upper left", fontsize=8)
     plt.grid(alpha=0.3)
     plt.savefig(os.path.join(FIG_DIR, "stock_bond_correlation.png"), dpi=120, bbox_inches="tight")
+    plt.close()
+
+    # Chart B3: risk-targeting. The cautious portfolio's rolling 1-year vol
+    # against a static band, showing it swing below in calm years and breach
+    # above in every crisis.
+    crv = rolling_vol_pct(values["Cautious (40/60)"]).dropna()
+    clo, chi = RISK_BANDS["Cautious (40/60)"]
+    bal_hi = RISK_BANDS["Balanced (60/40)"][1]
+    adv_hi = RISK_BANDS["Adventurous (100/0)"][1]
+    plt.figure(figsize=(10, 6))
+    plt.axhspan(clo, chi, color="#4C78A8", alpha=0.20, label=f"cautious target band ({clo}-{chi}%)")
+    plt.axhline(bal_hi, color="#888", linestyle="--", linewidth=0.9)
+    plt.axhline(adv_hi, color="#B0413E", linestyle="--", linewidth=0.9)
+    plt.text(crv.index[10], bal_hi + 0.4, "top of Balanced band", fontsize=8, color="#666")
+    plt.text(crv.index[10], adv_hi + 0.4, "top of Adventurous band", fontsize=8, color="#B0413E")
+    plt.plot(crv.index, crv, color="#1f4e79", linewidth=1.1)
+    plt.title("A static band, a moving reality: the cautious portfolio's rolling 1-year volatility")
+    plt.ylabel("Annualised volatility (%)")
+    plt.legend(loc="upper right", fontsize=8)
+    plt.grid(alpha=0.3)
+    plt.savefig(os.path.join(FIG_DIR, "risk_targeting_cautious.png"), dpi=120, bbox_inches="tight")
     plt.close()
 
     # Chart C: the theme's reward on top, its drawdown underneath, against a
