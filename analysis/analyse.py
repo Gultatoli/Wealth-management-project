@@ -90,6 +90,53 @@ def drawdown_in_window(value, start, end):
         return np.nan
     return (w / w.cummax() - 1.0).min()
 
+# Risk-adjusted measures. We assume a 2% annual cash (risk-free) rate, roughly
+# the average of UK/US short rates over the window. The exact figure barely
+# changes the ranking between portfolios; it is stated so the numbers can be
+# reproduced.
+RISK_FREE = 0.02
+
+def _ann_mean(value):
+    return value.pct_change().dropna().mean() * TRADING_DAYS
+
+def sharpe(value):
+    """Return per unit of total volatility."""
+    return (_ann_mean(value) - RISK_FREE) / annual_vol(value)
+
+def sortino(value):
+    """Return per unit of downside volatility only (penalises losses, not gains)."""
+    daily = value.pct_change().dropna()
+    downside = daily[daily < 0]
+    downside_dev = downside.std() * np.sqrt(TRADING_DAYS)
+    return (_ann_mean(value) - RISK_FREE) / downside_dev
+
+def calmar(value):
+    """CAGR relative to the worst drawdown: growth earned per unit of deepest pain."""
+    return cagr(value) / abs(max_drawdown(value))
+
+def longest_underwater_days(value):
+    """The longest stretch, in calendar days, spent below a previous high."""
+    peak = value.cummax()
+    high_dates = value.index[value >= peak]  # dates that set a new high
+    if len(high_dates) < 2:
+        return np.nan
+    gaps = high_dates.to_series().diff().max()
+    return gaps.days
+
+def recovery_from_year_peak(value, year):
+    """Days from the highest point in `year` until the value regains that level.
+    Returns None if it has not yet recovered by the end of the data."""
+    yr = value[value.index.year == year]
+    if len(yr) < 2:
+        return None
+    peak_val = yr.max()
+    peak_date = yr.idxmax()
+    after = value[value.index > peak_date]
+    regained = after[after >= peak_val]
+    if len(regained) == 0:
+        return None  # still underwater
+    return (regained.index[0] - peak_date).days
+
 
 # ---------------------------------------------------------------------------
 # 4. Definitions: the risk-graded portfolios plus a semis-tilted sleeve.
@@ -179,6 +226,30 @@ def main():
         out(f"| {name} | {cells} |")
     out()
 
+    # ---- risk-adjusted measures ----
+    out("## Risk-adjusted return and time underwater\n")
+    out(f"(Sharpe/Sortino assume a {RISK_FREE*100:.0f}% cash rate. "
+        f"'Longest underwater' is the longest stretch below a previous high.)\n")
+    out("| Portfolio | Sharpe | Sortino | Calmar | Longest underwater |")
+    out("|-----------|--------|---------|--------|--------------------|")
+    for name, v in values_all.items():
+        uw = longest_underwater_days(v)
+        out(f"| {name} | {sharpe(v):.2f} | {sortino(v):.2f} | {calmar(v):.2f} | "
+            f"{uw/365.25:.1f} years |")
+    out()
+
+    # ---- recovery from the two big events ----
+    out("## Time to recover from the peak (calendar days, and years)\n")
+    out("| Portfolio | From 2007 peak (GFC) | From 2022 peak |")
+    out("|-----------|----------------------|----------------|")
+    for name, v in values_all.items():
+        r08 = recovery_from_year_peak(v, 2007)
+        r22 = recovery_from_year_peak(v, 2022)
+        s08 = f"{r08/365.25:.1f} yrs" if r08 else "n/a"
+        s22 = f"{r22/365.25:.1f} yrs" if r22 else "not yet recovered"
+        out(f"| {name} | {s08} | {s22} |")
+    out()
+
     # ---- TEST 1: did cautious behave like 'cautious' in 2022? ----
     caut_2022 = calendar_year_return(values["Cautious (40/60)"], 2022)
     bal_2022 = calendar_year_return(values["Balanced (60/40)"], 2022)
@@ -190,8 +261,11 @@ def main():
     out(f"- Balanced (60% equity) 2022 return:  {bal_2022*100:+.1f}%")
     out(f"- Adventurous (100% equity) 2022 return: {adv_2022*100:+.1f}%")
     if adv_2022 != 0:
-        out(f"- The cautious portfolio captured {caut_2022/adv_2022*100:.0f}% of the "
-            f"all-equity loss despite holding only 40% equity.")
+        out(f"- In 2022 the cautious portfolio's calendar-year loss was "
+            f"{caut_2022/adv_2022*100:.0f}% of the all-equity portfolio's loss "
+            f"(share of that year's loss, NOT a measure of overall risk).")
+        out(f"- For contrast, in 2008 the same figure was "
+            f"{calendar_year_return(values['Cautious (40/60)'],2008)/calendar_year_return(values['Adventurous (100/0)'],2008)*100:.0f}%.")
     out()
 
     # ---- TEST 2: concentration, cap-weight vs equal-weight ----
@@ -203,11 +277,18 @@ def main():
                (rsp[rsp.index.year == 2023].iloc[-1] / rsp[rsp.index.year == 2023].iloc[0])
     gap_2024 = (spy[spy.index.year == 2024].iloc[-1] / spy[spy.index.year == 2024].iloc[0]) - \
                (rsp[rsp.index.year == 2024].iloc[-1] / rsp[rsp.index.year == 2024].iloc[0])
+    spy_2023 = calendar_year_return(prices["SPY"], 2023)
+    rsp_2023 = calendar_year_return(prices["RSP"], 2023)
+    spy_2024 = calendar_year_return(prices["SPY"], 2024)
+    rsp_2024 = calendar_year_return(prices["RSP"], 2024)
     out("## Test 2 - concentration (cap-weight SPY vs equal-weight RSP)\n")
-    out(f"- 2023 return gap (SPY minus RSP): {gap_2023*100:+.1f} pts")
-    out(f"- 2024 return gap (SPY minus RSP): {gap_2024*100:+.1f} pts")
+    out(f"- 2023: SPY {spy_2023*100:+.1f}% vs RSP {rsp_2023*100:+.1f}%  "
+        f"-> gap {gap_2023*100:+.1f} pts")
+    out(f"- 2024: SPY {spy_2024*100:+.1f}% vs RSP {rsp_2024*100:+.1f}%  "
+        f"-> gap {gap_2024*100:+.1f} pts")
     out(f"- A positive gap means the cap-weighted index beat its equal-weighted twin "
-        f"purely because a few mega-caps carried it: the concentration effect.")
+        f"because the largest few companies carried it. This measures mega-cap "
+        f"concentration, not AI specifically.")
     out()
 
     # ---- TEST 3: the theme and who could hold it ----
@@ -215,13 +296,22 @@ def main():
     soxx_2024 = calendar_year_return(soxx, 2024)
     soxx_2022 = calendar_year_return(soxx, 2022)
     soxx_2008 = calendar_year_return(soxx, 2008)
+    tilt = values["Semis-tilt (70/30)"]
     out("## Test 3 - the AI/semis theme and the risk it demanded\n")
-    out(f"- Semis (SOXX) 2023: {soxx_2023*100:+.1f}%   2024: {soxx_2024*100:+.1f}%")
-    out(f"- Semis (SOXX) 2022: {soxx_2022*100:+.1f}%   2008: {soxx_2008*100:+.1f}%")
-    out(f"- Semis full-period max drawdown: {max_drawdown(soxx)*100:.1f}%  "
+    out("The pure theme (SOXX, i.e. 100% semiconductors):")
+    out(f"- SOXX 2023: {soxx_2023*100:+.1f}%   2024: {soxx_2024*100:+.1f}%   "
+        f"2022: {soxx_2022*100:+.1f}%   2008: {soxx_2008*100:+.1f}%")
+    out(f"- SOXX full-period max drawdown: {max_drawdown(soxx)*100:.1f}%  "
         f"(volatility {annual_vol(soxx)*100:.1f}%)")
-    out(f"- The reward was real, but only a client who could hold through a "
-        f"{max_drawdown(soxx)*100:.0f}% drawdown could ever collect it.")
+    out("")
+    out("A more realistic 'Semis-tilt' portfolio (70% global equity + 30% SOXX):")
+    out(f"- Semis-tilt 2023: {calendar_year_return(tilt,2023)*100:+.1f}%   "
+        f"2022: {calendar_year_return(tilt,2022)*100:+.1f}%")
+    out(f"- Semis-tilt full-period max drawdown: {max_drawdown(tilt)*100:.1f}%  "
+        f"(volatility {annual_vol(tilt)*100:.1f}%)")
+    out(f"- So even a 30% tilt lifts drawdown from the adventurous portfolio's "
+        f"{max_drawdown(values['Adventurous (100/0)'])*100:.0f}% to "
+        f"{max_drawdown(tilt)*100:.0f}%. The point is the trade-off, not the theme.")
     out()
 
     # -----------------------------------------------------------------------
