@@ -1,51 +1,51 @@
 # Results
 
 Window: 2003-09-29 to 2026-07-21  (22.8 years)
-Assets: SPY (cap-weight equity), RSP (equal-weight equity), AGG (bonds), SOXX (semiconductors). Total-return (dividends reinvested).
+Equity is a global blend (60% US SPY, 30% developed-ex-US EFA, 10% emerging EEM). Bonds are AGG. RSP (equal-weight US) is used only for the concentration test, SOXX (semiconductors) for the theme test. All series are total-return (dividends reinvested).
 
 ## Full-period risk and return (annual rebalancing)
 
 | Portfolio | CAGR | Volatility | Max drawdown | Worst 12 months |
 |-----------|------|-----------|--------------|-----------------|
-| Defensive (20/80) | 4.8% | 5.4% | -17.5% | -16.4% |
-| Cautious (40/60) | 6.5% | 7.7% | -22.0% | -21.7% |
-| Balanced (60/40) | 8.0% | 10.9% | -34.5% | -29.1% |
-| Growth (80/20) | 9.5% | 14.5% | -45.9% | -39.3% |
-| Adventurous (100/0) | 10.8% | 18.5% | -56.1% | -48.9% |
-| Semis-tilt (70/30) | 12.9% | 21.1% | -57.6% | -48.9% |
+| Defensive (20/80) | 4.6% | 5.5% | -18.1% | -16.9% |
+| Cautious (40/60) | 6.0% | 7.9% | -23.6% | -22.9% |
+| Balanced (60/40) | 7.3% | 11.2% | -36.2% | -31.0% |
+| Growth (80/20) | 8.4% | 15.0% | -47.7% | -41.0% |
+| Adventurous (100/0) | 9.5% | 19.2% | -58.1% | -51.0% |
+| Semis-tilt (70/30) | 12.0% | 21.5% | -58.7% | -51.5% |
 | Semis only (100% SOXX) | 17.2% | 30.8% | -66.8% | -58.9% |
 
 ## Calendar-year total return in key years
 
 | Portfolio | 2008 | 2020 | 2022 | 2023 | 2024 |
 |---|---|---|---|---|---|
-| Defensive (20/80) | -1.3% | +9.2% | -13.7% | +9.4% | +6.6% |
-| Cautious (40/60) | -10.1% | +11.2% | -14.9% | +13.7% | +11.3% |
-| Balanced (60/40) | -18.8% | +13.2% | -16.2% | +18.0% | +16.1% |
-| Growth (80/20) | -27.5% | +15.2% | -17.4% | +22.4% | +20.8% |
-| Adventurous (100/0) | -36.2% | +17.2% | -18.6% | +26.7% | +25.6% |
-| Semis-tilt (70/30) | -40.5% | +27.0% | -24.0% | +39.3% | +23.1% |
+| Defensive (20/80) | -1.8% | +8.5% | -13.5% | +8.4% | +4.9% |
+| Cautious (40/60) | -11.1% | +9.8% | -14.6% | +11.8% | +8.1% |
+| Balanced (60/40) | -20.3% | +11.1% | -15.6% | +15.2% | +11.2% |
+| Growth (80/20) | -29.6% | +12.4% | -16.7% | +18.6% | +14.4% |
+| Adventurous (100/0) | -38.8% | +13.8% | -17.8% | +22.0% | +17.5% |
+| Semis-tilt (70/30) | -42.3% | +24.5% | -23.4% | +36.0% | +17.4% |
 | Semis only (100% SOXX) | -50.4% | +49.6% | -36.4% | +68.8% | +17.1% |
 
 ## Maximum drawdown within each stress episode
 
 | Portfolio | 2008 financial crisis | 2020 COVID crash | 2022 rate shock |
 |---|---|---|---|
-| Defensive (20/80) | -16.7% | -11.4% | -17.4% |
-| Cautious (40/60) | -22.0% | -15.7% | -18.8% |
-| Balanced (60/40) | -34.5% | -20.9% | -20.6% |
-| Growth (80/20) | -45.9% | -27.4% | -22.5% |
-| Adventurous (100/0) | -56.1% | -33.7% | -24.5% |
-| Semis-tilt (70/30) | -57.5% | -33.2% | -30.6% |
+| Defensive (20/80) | -17.5% | -11.6% | -17.7% |
+| Cautious (40/60) | -23.6% | -16.0% | -19.4% |
+| Balanced (60/40) | -36.2% | -20.7% | -21.6% |
+| Growth (80/20) | -47.7% | -26.9% | -23.8% |
+| Adventurous (100/0) | -58.1% | -33.3% | -26.1% |
+| Semis-tilt (70/30) | -58.7% | -32.7% | -31.8% |
 | Semis only (100% SOXX) | -66.0% | -34.3% | -45.5% |
 
 ## Test 1 - the cautious label in 2022
 
-- Defensive (20% equity) 2022 return: -13.7%
-- Cautious (40% equity) 2022 return:  -14.9%
-- Balanced (60% equity) 2022 return:  -16.2%
-- Adventurous (100% equity) 2022 return: -18.6%
-- The cautious portfolio captured 80% of the all-equity loss despite holding only 40% equity.
+- Defensive (20% equity) 2022 return: -13.5%
+- Cautious (40% equity) 2022 return:  -14.6%
+- Balanced (60% equity) 2022 return:  -15.6%
+- Adventurous (100% equity) 2022 return: -17.8%
+- The cautious portfolio captured 82% of the all-equity loss despite holding only 40% equity.
 
 ## Test 2 - concentration (cap-weight SPY vs equal-weight RSP)
 

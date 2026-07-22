@@ -29,6 +29,8 @@ import requests
 # ---------------------------------------------------------------------------
 TICKERS = {
     "SPY": "US large-cap equity (S&P 500), cap-weighted",
+    "EFA": "Developed-market equity outside the US (MSCI EAFE)",
+    "EEM": "Emerging-market equity (MSCI EM)",
     "RSP": "US large-cap equity, EQUAL-weighted (for the concentration test)",
     "AGG": "US aggregate bonds (the 'ballast' in a cautious portfolio)",
     "SOXX": "US semiconductors (proxy for the AI / memory hardware theme)",

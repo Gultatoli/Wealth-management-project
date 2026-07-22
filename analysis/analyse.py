@@ -31,7 +31,7 @@ TRADING_DAYS = 252
 # ---------------------------------------------------------------------------
 def load_prices():
     series = {}
-    for ticker in ["SPY", "RSP", "AGG", "SOXX"]:
+    for ticker in ["SPY", "EFA", "EEM", "RSP", "AGG", "SOXX"]:
         df = pd.read_csv(os.path.join(DATA_DIR, f"{ticker}.csv"),
                          parse_dates=["date"], index_col="date")
         series[ticker] = df["adj_close"].rename(ticker)
@@ -93,14 +93,31 @@ def drawdown_in_window(value, start, end):
 
 # ---------------------------------------------------------------------------
 # 4. Definitions: the risk-graded portfolios plus a semis-tilted sleeve.
+#
+# The equity portion is a GLOBAL blend, not just the US, because that is what a
+# UK wealth manager's model portfolios actually hold. We split every unit of
+# equity as 60% US (SPY), 30% developed-ex-US (EFA), 10% emerging (EEM), which
+# is roughly global market-cap weight. The bond portion is a high-quality
+# aggregate bond holding (AGG). So a "cautious" 40% equity portfolio is really
+# 24% US + 12% developed + 4% emerging + 60% bonds.
 # ---------------------------------------------------------------------------
+def graded(equity):
+    """Return the ticker weights for a portfolio with `equity` in global stocks."""
+    return {
+        "SPY": 0.60 * equity,
+        "EFA": 0.30 * equity,
+        "EEM": 0.10 * equity,
+        "AGG": round(1 - equity, 4),
+    }
+
 PORTFOLIOS = {
-    "Defensive (20/80)":   {"SPY": 0.20, "AGG": 0.80},
-    "Cautious (40/60)":    {"SPY": 0.40, "AGG": 0.60},
-    "Balanced (60/40)":    {"SPY": 0.60, "AGG": 0.40},
-    "Growth (80/20)":      {"SPY": 0.80, "AGG": 0.20},
-    "Adventurous (100/0)": {"SPY": 1.00},
-    "Semis-tilt (70/30)":  {"SPY": 0.70, "SOXX": 0.30},  # an adventurous theme bet
+    "Defensive (20/80)":   graded(0.20),
+    "Cautious (40/60)":    graded(0.40),
+    "Balanced (60/40)":    graded(0.60),
+    "Growth (80/20)":      graded(0.80),
+    "Adventurous (100/0)": graded(1.00),
+    # An adventurous theme bet: 70% global equity, 30% semiconductors.
+    "Semis-tilt (70/30)":  {"SPY": 0.42, "EFA": 0.21, "EEM": 0.07, "SOXX": 0.30},
 }
 
 STRESS = {
@@ -128,8 +145,10 @@ def main():
 
     out(f"# Results\n")
     out(f"Window: {start} to {end}  ({(prices.index[-1]-prices.index[0]).days/365.25:.1f} years)")
-    out(f"Assets: SPY (cap-weight equity), RSP (equal-weight equity), "
-        f"AGG (bonds), SOXX (semiconductors). Total-return (dividends reinvested).\n")
+    out(f"Equity is a global blend (60% US SPY, 30% developed-ex-US EFA, "
+        f"10% emerging EEM). Bonds are AGG. RSP (equal-weight US) is used only "
+        f"for the concentration test, SOXX (semiconductors) for the theme test. "
+        f"All series are total-return (dividends reinvested).\n")
 
     # ---- full-period metrics table ----
     out("## Full-period risk and return (annual rebalancing)\n")
@@ -229,18 +248,29 @@ def main():
     plt.savefig(os.path.join(FIG_DIR, "concentration_spy_vs_rsp.png"), dpi=120, bbox_inches="tight")
     plt.close()
 
-    # Chart C: the theme's reward vs its drawdown
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.plot(soxx.index, soxx, color="teal", label="Semis (SOXX), total return")
-    dd = soxx / soxx.cummax() - 1.0
-    ax2 = ax.twinx()
-    ax2.fill_between(dd.index, dd * 100, 0, color="teal", alpha=0.15)
-    ax.set_title("The AI/semis theme: reward on top, drawdown underneath")
-    ax.set_ylabel("Growth of £1 (log)")
-    ax.set_yscale("log")
-    ax2.set_ylabel("Drawdown (%)")
-    ax.legend(loc="upper left")
-    ax.grid(alpha=0.3)
+    # Chart C: the theme's reward on top, its drawdown underneath, against a
+    # broad global-equity portfolio for context. Two stacked panels.
+    adv = values["Adventurous (100/0)"]
+    adv_norm = adv / adv.iloc[0]
+    fig, (top, bot) = plt.subplots(
+        2, 1, figsize=(10, 7.5), sharex=True,
+        gridspec_kw={"height_ratios": [2, 1], "hspace": 0.08})
+    top.plot(soxx.index, soxx, color="#1B7A6E", label="Semiconductors (SOXX)")
+    top.plot(adv_norm.index, adv_norm, color="#7A7A7A", label="Adventurous (global equity)")
+    top.set_yscale("log")
+    top.set_ylabel("Growth of £1 (log scale)")
+    top.set_title("The AI/semis theme: far more reward, far deeper holes")
+    top.legend(loc="upper left")
+    top.grid(alpha=0.3)
+    dd_soxx = (soxx / soxx.cummax() - 1.0) * 100
+    dd_adv = (adv / adv.cummax() - 1.0) * 100
+    bot.fill_between(dd_soxx.index, dd_soxx, 0, color="#1B7A6E", alpha=0.25)
+    bot.plot(dd_soxx.index, dd_soxx, color="#1B7A6E", linewidth=0.8, label="Semiconductors")
+    bot.plot(dd_adv.index, dd_adv, color="#7A7A7A", linewidth=0.9, label="Global equity")
+    bot.set_ylabel("Drawdown (%)")
+    bot.set_xlabel("")
+    bot.legend(loc="lower left", fontsize=8)
+    bot.grid(alpha=0.3)
     plt.savefig(os.path.join(FIG_DIR, "semis_reward_vs_drawdown.png"), dpi=120, bbox_inches="tight")
     plt.close()
 
@@ -249,25 +279,28 @@ def main():
     adv = values["Adventurous (100/0)"]
     caut_08, adv_08 = calendar_year_return(caut, 2008), calendar_year_return(adv, 2008)
     caut_22, adv_22 = calendar_year_return(caut, 2022), calendar_year_return(adv, 2022)
-    fig, ax = plt.subplots(figsize=(9, 6))
+    fig, ax = plt.subplots(figsize=(9, 6.5))
     groups = ["2008\n(bonds cushioned)", "2022\n(bonds fell too)"]
     x = np.arange(len(groups))
     width = 0.35
+    lo = min(caut_08, adv_08, caut_22, adv_22) * 100
+    ax.set_ylim(lo - 6, 14)  # headroom above 0 for the annotations, below for labels
     ax.bar(x - width/2, [caut_08*100, caut_22*100], width,
            label="Cautious (40% equity)", color="#4C78A8")
     ax.bar(x + width/2, [adv_08*100, adv_22*100], width,
            label="Adventurous (100% equity)", color="#B0413E")
     for i, (c, a) in enumerate([(caut_08, adv_08), (caut_22, adv_22)]):
-        ax.text(i - width/2, c*100 - 1.5, f"{c*100:.0f}%", ha="center", va="top", fontsize=10)
-        ax.text(i + width/2, a*100 - 1.5, f"{a*100:.0f}%", ha="center", va="top", fontsize=10)
+        ax.text(i - width/2, c*100 - 1.0, f"{c*100:.0f}%", ha="center", va="top", fontsize=10)
+        ax.text(i + width/2, a*100 - 1.0, f"{a*100:.0f}%", ha="center", va="top", fontsize=10)
         share = c / a * 100
-        ax.text(i, 2, f"cautious took {share:.0f}%\nof the equity loss",
-                ha="center", va="bottom", fontsize=9, style="italic")
+        ax.text(i, 9, f"cautious took {share:.0f}%\nof the equity loss",
+                ha="center", va="center", fontsize=9, style="italic")
     ax.axhline(0, color="black", linewidth=0.8)
     ax.set_xticks(x); ax.set_xticklabels(groups)
     ax.set_ylabel("Calendar-year total return (%)")
-    ax.set_title("Does 'cautious' mean cautious? The bond cushion in 2008 vs 2022")
-    ax.legend()
+    ax.set_title("Does 'cautious' mean cautious? The bond cushion in 2008 vs 2022",
+                 pad=14)
+    ax.legend(loc="lower right")
     ax.grid(alpha=0.3, axis="y")
     plt.savefig(os.path.join(FIG_DIR, "bond_cushion_2008_vs_2022.png"), dpi=120, bbox_inches="tight")
     plt.close()
