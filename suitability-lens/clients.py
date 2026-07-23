@@ -38,8 +38,8 @@ CLIENTS = [
         name="Margaret",
         age=66,
         label="Cautious",
-        story="Just retired. She was profiled cautious, which feels right for "
-              "someone who cannot go back to work.",
+        story="Just retired and nervous about losing money, so she was placed in "
+              "the most cautious model, with only 20% in shares.",
         goal="Draw about £24,000 a year, rising with inflation, for a 30-year "
              "retirement without running out of money.",
         horizon_years=30,
@@ -51,8 +51,8 @@ CLIENTS = [
         axis=AllocationAxis(
             kind="equity",
             steps=[0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80],
-            base_index=2,     # 0.40 == cautious
-            label_lo="More cautious",
+            base_index=0,     # 0.20 == the most cautious model, where she sits now
+            label_lo="Most cautious",
             label_hi="More growth",
         ),
     ),
@@ -66,7 +66,7 @@ CLIENTS = [
         goal="Turn £40,000 plus £500 a month into a house deposit in about six "
              "years.",
         horizon_years=6,
-        amounts={"initial": 40_000, "monthly": 500, "target": 75_000},
+        amounts={"initial": 40_000, "monthly": 500, "target": 100_000},
         drift="diversification drift",
         decision="Do not lean on the bond cushion the way the label assumes, and "
                  "de-risk toward the goal as the date nears.",
@@ -94,10 +94,10 @@ CLIENTS = [
                  "toward a diversified adventurous portfolio.",
         axis=AllocationAxis(
             kind="concentration",
-            steps=[0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30],
-            base_index=6,     # 0.30 == full semis-tilt (her current drift)
+            steps=[0.00, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60],
+            base_index=6,     # 0.60 semis == a client who really chased the theme
             label_lo="Diversified",
-            label_hi="Semis-tilt",
+            label_hi="Concentrated",
         ),
     ),
 ]
