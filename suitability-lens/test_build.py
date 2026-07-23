@@ -8,14 +8,15 @@ def test_build_payload_shape():
     for c in payload["clients"]:
         n = len(c["axis"]["steps"])
         assert len(c["market"]) == n
-        assert len(c["goal"]) == n
+        assert len(c["goal_values"]) == n
+        assert isinstance(c["goal"], str) and len(c["goal"]) > 10   # description
         assert c["note"].startswith("Dear")
         assert "conditions" in c
     m = next(c for c in payload["clients"] if c["key"] == "margaret")
     assert m["goal_metric"] == "survival"
-    assert 68 <= m["goal"][m["axis"]["base_index"]] <= 82
+    assert 68 <= m["goal_values"][m["axis"]["base_index"]] <= 82
 
     p = next(c for c in payload["clients"] if c["key"] == "priya")
     assert p["goal_metric"] == "concentration"
     # her second lens is a negative recent drawdown, deepening with concentration
-    assert p["goal"][-1] < p["goal"][0] <= 0
+    assert p["goal_values"][-1] < p["goal_values"][0] <= 0
