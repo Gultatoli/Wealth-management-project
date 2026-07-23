@@ -12,6 +12,13 @@
   :root { --bg:#141414; --fg:#ececec; --muted:#a2a2a2; --line:#2c2c2c;
           --market:#e0894f; --goal:#5bbf98; --warn:#e0705c; --card:#1d1d1d;
           --track:#333330; } }
+/* Explicit viewer toggle wins over the OS preference in both directions. */
+:root[data-theme="light"] { --bg:#ffffff; --fg:#1a1a1a; --muted:#5f5f5f;
+  --line:#e4e4e1; --market:#c86b2b; --goal:#1a6a4f; --warn:#b3402f;
+  --card:#f7f7f5; --track:#e0e0dc; }
+:root[data-theme="dark"] { --bg:#141414; --fg:#ececec; --muted:#a2a2a2;
+  --line:#2c2c2c; --market:#e0894f; --goal:#5bbf98; --warn:#e0705c;
+  --card:#1d1d1d; --track:#333330; }
 * { box-sizing:border-box; }
 body { margin:0; background:var(--bg); color:var(--fg);
   font:16px/1.55 -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
