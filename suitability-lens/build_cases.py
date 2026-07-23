@@ -50,7 +50,7 @@ def build(fetch=False):
             "axis": {"kind": c.axis.kind, "steps": c.axis.steps,
                      "base_index": c.axis.base_index,
                      "label_lo": c.axis.label_lo, "label_hi": c.axis.label_hi},
-            "market": market, "goal": goal,
+            "market": market, "goal_values": goal,
             "goal_metric": GOAL_METRIC[c.key],
             "conditions": conditions, "note": note,
         })
