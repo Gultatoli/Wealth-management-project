@@ -230,6 +230,10 @@ The recurring part is income tax. Taxing an assumed 2.5% income yield at 35% in 
 
 Over almost 23 years, the risk labels ranked market risk correctly, but the risk beneath a fixed label drifted in three ways. Diversification drift: in 2022 a "cautious" portfolio's loss was 82% as large as an all-equity portfolio's, against 29% in 2008, because the stock-bond correlation flipped from −0.14 to +0.23, and it then recovered more slowly than the aggressive portfolios. Concentration drift: cap-weighted US equity grew far more concentrated in its largest companies, so a "balanced" label in 2025 covers a different exposure than in 2019. Objective drift: for a long-horizon retiree drawing 4% or more, the most cautious portfolio was the *least* likely to last. A static label ranks market risk, but cannot capture goal risk, the changing shape of the portfolio, or a client's changing needs. And against all of that uncertainty, the one near-certain number is cost: a 1% annual fee alone consumed about a quarter of the balanced portfolio's 23-year gain.
 
+## Companion tool: the Suitability Lens
+
+The analysis diagnoses the problem. The [Suitability Lens](suitability-lens/) acts on it. It takes three private clients, a retiree, a house saver, and a concentrated investor, and shows each one's market risk and goal risk side by side, the drift that bites them, a present-day read on whether that drift is a live concern, and the plain-English note a discretionary manager would send. Move a slider and the two kinds of risk pull apart while the risk label stays fixed. It runs on the same data and engine as this analysis, so the numbers never disagree. Live link: __ARTIFACT_URL__.
+
 ## Method
 
 **Portfolios.** Five risk-graded portfolios defined by equity weight, rebalanced to target every year, plus one semiconductor-tilted sleeve. The equity portion is a global blend: every unit of equity is split 60% US, 30% developed markets outside the US, and 10% emerging markets, roughly global market-cap weight. The bond portion is US aggregate bonds.
