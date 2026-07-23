@@ -232,7 +232,7 @@ Over almost 23 years, the risk labels ranked market risk correctly, but the risk
 
 ## Companion tool: the Suitability Lens
 
-The analysis diagnoses the problem. The [Suitability Lens](suitability-lens/) acts on it. It takes three private clients, a retiree, a house saver, and a concentrated investor, and shows each one's market risk and goal risk side by side, the drift that bites them, a present-day read on whether that drift is a live concern, and the plain-English note a discretionary manager would send. Move a slider and the two kinds of risk pull apart while the risk label stays fixed. It runs on the same data and engine as this analysis, so the numbers never disagree. Live link: __ARTIFACT_URL__.
+The analysis diagnoses the problem. The [Suitability Lens](suitability-lens/) acts on it. It takes three private clients, a retiree, a house saver, and a concentrated investor, and shows each one's market risk and goal risk side by side, the drift that bites them, a present-day read on whether that drift is a live concern, and the plain-English note a discretionary manager would send. Move a slider and the two kinds of risk pull apart while the risk label stays fixed. It runs on the same data and engine as this analysis, so the numbers never disagree. To try it, open `suitability-lens/index.html` in a browser, or see the [folder README](suitability-lens/) to rebuild it from the latest data.
 
 ## Method
 
