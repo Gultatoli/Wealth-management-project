@@ -136,3 +136,30 @@ def goal_grid(sim_core, client):
         else:
             raise ValueError(client.key)
     return out
+
+
+# ---- current-conditions signals ----
+def as_of_date(prices):
+    return str(prices.index[-1].date())
+
+
+def correlation_regime(prices):
+    eq = analyse.portfolio_value(prices, analyse.graded(1.00)).pct_change()
+    bond = prices["AGG"].pct_change()
+    roll = eq.rolling(analyse.TRADING_DAYS).corr(bond).dropna()
+    value = round(float(roll.iloc[-1]), 2)
+    return {"value": value,
+            "status": "elevated" if value > 0 else "normal",
+            "as_of": as_of_date(prices)}
+
+
+def concentration_signal(prices):
+    window = analyse.TRADING_DAYS
+    spy = prices["SPY"]
+    rsp = prices["RSP"]
+    spy_ret = spy.iloc[-1] / spy.iloc[-window] - 1.0
+    rsp_ret = rsp.iloc[-1] / rsp.iloc[-window] - 1.0
+    spread = round(float((spy_ret - rsp_ret) * 100), 1)
+    return {"spread_pct": spread,
+            "status": "elevated" if spread > 5 else "normal",
+            "as_of": as_of_date(prices)}
