@@ -1,0 +1,1077 @@
+"""
+The decision script. Pure data.
+
+Thirteen moments between January 2004 and today where a discretionary manager
+would have had to do something. Every market fact in the `context` fields is
+measured from the CSVs in ../data/ and is checked by test_decisions.py, so the
+narrative cannot drift away from the data underneath it.
+
+The `after` text on each option is written to be useful rather than fair. It
+says what the choice actually did, including when a bad-sounding choice worked
+and a good-sounding one cost money. A simulator that rewards only the textbook
+answer teaches nothing, because the textbook answer is easy to spot when the
+question is written by the person marking it.
+
+Option fields:
+    model            switch to this model portfolio (None keeps the current one)
+    reserve_years    set the ring-fenced cash sleeve to this many years of income
+    one_off          a one-off cash movement, negative for a withdrawal
+    withdrawal       "fixed" or "variable", the income policy from here on
+    fee              a new all-in annual charge
+    suitability      -2 to +2, whether the allocation still fits her circumstances
+    conduct          -2 to +2, whether the client was handled properly
+    file             the line this choice puts in the client file
+    requires         gate the option on the current state, so the menu only ever
+                     offers things that make sense from where the player is
+"""
+
+# The three-line brief shown before the first decision.
+BRIEF = [
+    "Real market history, from the same data as the paper.",
+    "Thirteen decisions between January 2004 and today.",
+    "Two kinds of risk are scored, and so is how you treat her.",
+]
+
+DECISIONS = [
+    # ------------------------------------------------------------------
+    {
+        "id": "d01_open",
+        "month": "2004-01",
+        "age": 58,
+        "title": "The first recommendation",
+        "context": [
+            "Ruth's questionnaire scores Cautious. The house Cautious model "
+            "holds 40% equity.",
+            "Her income requirement is the number the questionnaire never asked "
+            "about. She wants £22,000 a year from 65, rising with inflation, "
+            "from £450,000. She may be drawing it for thirty years.",
+            "The paper's simulation is blunt about what that means. Over a "
+            "thirty-year drawdown at a 4% starting rate, a 20% equity portfolio "
+            "lasted in 74% of simulated futures. A 60% equity portfolio lasted "
+            "in 92%.",
+        ],
+        "client": "I don't want anything clever. I watched my pension fall "
+                  "three years running and I never want to feel that again. "
+                  "Keep it safe.",
+        "question": "What do you recommend, and what goes in the file?",
+        "options": [
+            {
+                "id": "a", "label": "Defensive, 20% equity",
+                "detail": "Take her at her word. She asked for safe.",
+                "model": "defensive",
+                "suitability": -2, "conduct": -1,
+                "file": "Client requested low risk. Defensive model selected in "
+                        "line with stated preference.",
+                "after":
+                    "This is where both her questionnaire and her own words "
+                    "point, and it is the trap the paper is built around. "
+                    "Twenty percent equity has the lowest market risk on the "
+                    "menu and the highest chance of running out of money over a "
+                    "thirty-year drawdown. Nothing about that will show up for "
+                    "years, which is exactly why it survives review after "
+                    "review.",
+            },
+            {
+                "id": "b", "label": "Cautious, 40% equity",
+                "detail": "Match the questionnaire. The house model for her score.",
+                "model": "cautious",
+                "suitability": 1, "conduct": 0,
+                "file": "Cautious model selected, consistent with risk "
+                        "questionnaire score.",
+                "after":
+                    "Defensible, and the answer a compliance file is happiest "
+                    "with. It also quietly accepts a return she may not be able "
+                    "to live on. The questionnaire measured how she feels about "
+                    "falling markets. It never asked what return she needs, and "
+                    "those are different questions with different answers.",
+            },
+            {
+                "id": "c", "label": "Balanced, 60% equity, and write down why",
+                "detail": "Above her questionnaire score. Explain the conflict "
+                          "between what she can tolerate and what she needs, and "
+                          "record it.",
+                "model": "balanced",
+                "suitability": 2, "conduct": 2,
+                "file": "Questionnaire score (Cautious) conflicts with required "
+                        "return. Explained that a 20-40% equity allocation "
+                        "carries a materially higher chance of the income "
+                        "failing over a 30-year retirement. Client understood "
+                        "and accepted a Balanced allocation. To be reviewed "
+                        "annually and reduced as the horizon shortens.",
+                "after":
+                    "The hard conversation, had at the only point where having "
+                    "it is cheap. You have taken more market risk in order to "
+                    "take less goal risk, and you have written down why. If she "
+                    "rings you in a crash, that note is the difference between a "
+                    "documented decision and an indefensible one.",
+            },
+            {
+                "id": "d", "label": "Growth, 80% equity",
+                "detail": "Her horizon is thirty-seven years. Solve the income "
+                          "problem properly.",
+                "model": "growth",
+                "suitability": -1, "conduct": -2,
+                "file": "Growth model selected to maximise the probability of "
+                        "meeting the income target.",
+                "after":
+                    "The goal-risk arithmetic points this way and her capacity "
+                    "does not. She cannot replace this capital and she has told "
+                    "you a 15% fall would stop her sleeping. Eighty percent "
+                    "equity fell 47.7% at its worst in this data. An allocation "
+                    "she cannot hold through a crash is not suitable however "
+                    "good the expected outcome, because she will sell it at the "
+                    "bottom and then it is not the expected outcome any more.",
+            },
+        ],
+    },
+    # ------------------------------------------------------------------
+    {
+        "id": "d02_gift",
+        "month": "2006-03",
+        "age": 60,
+        "title": "Her daughter's deposit",
+        "context": [
+            "Two good years behind you. Global equity returned 14.2% in 2004 "
+            "and 10.8% in 2005, and 2006 will add 17.5%.",
+            "Ruth is 60 and still working. No income is being drawn yet.",
+        ],
+        "client": "Katie has found a flat and she's £40,000 short. I've got it "
+                  "sitting there. I'd rather see her in a home now than leave it "
+                  "to her later.",
+        "question": "It is her money and her decision. What do you do with it?",
+        "options": [
+            {
+                "id": "a", "label": "Pay it. Say nothing further.",
+                "detail": "She asked, it is hers, it is done.",
+                "one_off": -40000,
+                "suitability": 0, "conduct": -1,
+                "file": "£40,000 withdrawal at client request.",
+                "after":
+                    "The money moves and the client is happy. What is missing is "
+                    "the consequence. Forty thousand pounds taken at 60 is not "
+                    "forty thousand pounds at 90, and the gap is the part only "
+                    "you can see. Making it visible is the job. Doing this "
+                    "silently is not.",
+            },
+            {
+                "id": "b", "label": "Pay it, and show her what it costs",
+                "detail": "Illustrate the effect on her sustainable income "
+                          "before she signs.",
+                "one_off": -40000,
+                "suitability": 1, "conduct": 2,
+                "file": "£40,000 gift to daughter at client's request. "
+                        "Illustrated the effect on sustainable income; client "
+                        "accepted a modest reduction in target income rather "
+                        "than defer the gift. No change to allocation.",
+                "after":
+                    "Right answer, and note what you did not do. You did not "
+                    "tell her she was wrong. The gift is hers to make and the "
+                    "arithmetic is yours to show, and keeping those two things "
+                    "separate is most of what good advice looks like.",
+            },
+            {
+                "id": "c", "label": "Advise against it",
+                "detail": "Suggest she leave it in the estate instead.",
+                "one_off": 0,
+                "suitability": 0, "conduct": -2,
+                "file": "Advised client against gift to daughter.",
+                "after":
+                    "This oversteps. Whether her daughter gets help now or "
+                    "inherits later is a family decision, not a portfolio one. "
+                    "A manager who turns every cash-flow request into a lecture "
+                    "stops being told about them, and a client who stops telling "
+                    "you things is a worse problem than any withdrawal.",
+            },
+            {
+                "id": "d", "label": "Pay it, and de-risk to protect what is left",
+                "detail": "Smaller pot, so take less chance with it.",
+                "one_off": -40000,
+                "model": "cautious",
+                "suitability": -1, "conduct": 0,
+                "file": "£40,000 withdrawal; allocation reduced to Cautious to "
+                        "protect remaining capital.",
+                "after":
+                    "A common instinct and a costly one. The gift cut the pot, "
+                    "which raises the return she needs from what is left, and "
+                    "you answered by lowering the expected return. The two moves "
+                    "pull against each other and only one of them is written "
+                    "down as a decision.",
+            },
+        ],
+    },
+    # ------------------------------------------------------------------
+    {
+        "id": "d03_peak",
+        "month": "2007-10",
+        "age": 62,
+        "title": "Three years out, and everything is going well",
+        "context": [
+            "Four good years in a row. Global equity returned 14.2%, 10.8%, "
+            "17.5% and 9.3% across 2004 to 2007.",
+            "Ruth retires in three years and starts drawing income in January "
+            "2011.",
+            "Global equity in this data peaks on 31 October 2007. You are three "
+            "weeks away and there is no way for you to know that.",
+        ],
+        "client": None,
+        "question": "Annual review. She retires in three years. Anything?",
+        "options": [
+            {
+                "id": "a", "label": "Nothing. Stay at target.",
+                "detail": "You cannot see tops. Do not pretend to.",
+                "suitability": 0, "conduct": 0,
+                "file": "Annual review. No change to strategic allocation.",
+                "after":
+                    "Defensible, and the honest case for it is strong: no signal "
+                    "available in October 2007 identified the peak that was three "
+                    "weeks away. What is weaker is that her circumstances did "
+                    "change. She is three years from drawing income and the plan "
+                    "made no mention of that.",
+            },
+            {
+                "id": "b", "label": "Start the planned glidepath",
+                "detail": "Begin reducing equity toward the drawdown allocation, "
+                          "on the calendar, not on a view.",
+                "model": "cautious",
+                "suitability": 2, "conduct": 2,
+                "file": "Three years to income commencement. Commenced planned "
+                        "reduction in equity toward the drawdown allocation, in "
+                        "line with the agreed plan and not on the basis of a "
+                        "market view.",
+                "after":
+                    "The professional version of the same instinct. It de-risks "
+                    "on a rule tied to her circumstances rather than to a "
+                    "forecast. It also happened to land three weeks before a "
+                    "58.1% fall in global equity, which is luck, and the file "
+                    "should say the reason was the calendar. Take the outcome. "
+                    "Do not take credit for it.",
+            },
+            {
+                "id": "c", "label": "Move to cash and wait for a better entry",
+                "detail": "It has run a long way. Step aside.",
+                "model": "cash",
+                "suitability": -2, "conduct": -1,
+                "file": "Moved to cash pending a more attractive entry point.",
+                "after":
+                    "A market call dressed as caution. It will look brilliant "
+                    "for about eighteen months. The trouble is that the exit was "
+                    "a guess that happened to land, and the re-entry is a second "
+                    "guess you now have to make in the middle of a panic with "
+                    "less information and more fear.",
+            },
+            {
+                "id": "d", "label": "Add to equity while it is working",
+                "detail": "Momentum is strong and her horizon is long.",
+                "model": "growth",
+                "suitability": -2, "conduct": -1,
+                "file": "Increased equity allocation following sustained strong "
+                        "returns.",
+                "after":
+                    "Four good years is not evidence about the fifth. Global "
+                    "equity peaked on 31 October 2007 and fell 58.1% to 9 March "
+                    "2009. Buying more of what has just gone up, three years "
+                    "before a client needs the money, is the shape of most "
+                    "avoidable damage in this job.",
+            },
+        ],
+    },
+    # ------------------------------------------------------------------
+    {
+        "id": "d04_call",
+        "month": "2008-10",
+        "age": 63,
+        "title": "The phone call",
+        "context": [
+            "October 2008. Global equity is 26.9% below its October 2007 peak. "
+            "Lehman has failed and the banks are on the front page every day.",
+            "Bonds are doing exactly what they are supposed to do. The aggregate "
+            "bond index returns 7.4% across 2008.",
+            "From here, global equity falls another 42% to its low on 9 March "
+            "2009. Then it rises 74.9% from that low to the end of the year. "
+            "You know none of this.",
+        ],
+        "client": "I want it all in cash. Today. I can't sleep and I can't stop "
+                  "watching the news. You told me this was sensible.",
+        "question": "She is asking for something you think is wrong. What do you "
+                    "actually do?",
+        "options": [
+            {
+                "id": "a", "label": "Do as she asks. Everything to cash.",
+                "detail": "It is her money and she has given a clear instruction.",
+                "model": "cash",
+                "suitability": -2, "conduct": -1,
+                "file": "Client instruction to move to cash. Executed.",
+                "after":
+                    "You have followed an instruction and protected yourself "
+                    "rather than her. For five months it looks inspired, because "
+                    "equity fell another 42% to 9 March. Then it rose 74.9% by "
+                    "the end of the year and the file contains no plan for "
+                    "getting back in. That missing sentence is where the real "
+                    "money goes.",
+            },
+            {
+                "id": "b", "label": "Refuse. Hold the model and tell her to stop "
+                                    "watching the news.",
+                "detail": "The allocation is right. Do not let panic drive it.",
+                "suitability": 1, "conduct": -2,
+                "file": "Client wished to de-risk. Adviser held allocation.",
+                "after":
+                    "The portfolio decision is probably right and the handling "
+                    "is wrong. Stop watching the news is not advice and it is "
+                    "not a record. A client who is talked over in October 2008 "
+                    "is a client who leaves in March 2009, and she will take the "
+                    "portfolio with her at the worst possible moment.",
+            },
+            {
+                "id": "c", "label": "Hold the model. Ring-fence a year of income "
+                                    "in cash and agree how you get back to normal.",
+                "detail": "Treat the fear as real without treating it as an "
+                          "instruction.",
+                "reserve_years": 1.0,
+                "suitability": 2, "conduct": 2,
+                "file": "Client distressed by market falls. Discussed capacity, "
+                        "horizon and the cost of selling into a falling market. "
+                        "Agreed to hold the strategic allocation and to "
+                        "ring-fence 12 months of income in cash so that no "
+                        "equities need be sold to fund income. Agreed the cash "
+                        "sleeve is rebuilt from rebalancing rather than from a "
+                        "market view. Client reassured and remains invested.",
+                "after":
+                    "This is the answer. She gets something concrete and "
+                    "proportionate, the portfolio keeps working, and the file "
+                    "shows a manager who listened first and then acted on the "
+                    "arithmetic. The cash sleeve is worth less than the "
+                    "conversation that came with it.",
+            },
+            {
+                "id": "d", "label": "De-risk one step and record a lower risk "
+                                    "profile",
+                "detail": "She has shown you her real tolerance. Believe her.",
+                "model": "defensive",
+                "suitability": -1, "conduct": 1,
+                "file": "Client's risk tolerance re-assessed downward following "
+                        "market falls. Moved to Defensive.",
+                "after":
+                    "Honest, and it locks the fall in. Re-profiling a client in "
+                    "the middle of a crash turns a temporary feeling into a "
+                    "permanent allocation. Her horizon did not change in October "
+                    "2008. Her income requirement did not change. Only the "
+                    "headlines changed, and they are the one input that always "
+                    "reverts.",
+            },
+        ],
+    },
+    # ------------------------------------------------------------------
+    {
+        "id": "d05_bottom",
+        "month": "2009-03",
+        "age": 63,
+        "title": "The bottom, though nobody calls it that yet",
+        "context": [
+            "9 March 2009. Global equity is 58.1% below its 2007 peak.",
+            "From this day to 31 December it returns 74.9%. On 9 March there is "
+            "nothing visible that says so.",
+            "Bonds held up through the crash, so any portfolio holding both is "
+            "now well below its target equity weight.",
+        ],
+        "client": "Is it over?",
+        "question": "What do you do with a portfolio that has drifted a long way "
+                    "from its targets?",
+        "options": [
+            {
+                "id": "a", "label": "Rebalance back to target",
+                "detail": "Sell what held up, buy what fell. Because the rule "
+                          "says so, not because you have a view.",
+                "rebalance": True,
+                "suitability": 2, "conduct": 2,
+                "file": "Portfolio materially below target equity weight "
+                        "following market falls. Rebalanced to strategic "
+                        "weights. This is a rules-based rebalance and not a "
+                        "market call.",
+                "after":
+                    "Right move, right reason. Rebalancing is mechanical: bonds "
+                    "rose, equities fell, the portfolio was off target and you "
+                    "brought it back. That it bought within days of the low is a "
+                    "by-product of the rule. Write it up that way, because the "
+                    "next time the rule fires you will not be so lucky and you "
+                    "will want to have promised nothing.",
+            },
+            {
+                "id": "b", "label": "Hold. Do not add to equities here.",
+                "detail": "Leave it alone until the dust settles.",
+                "suitability": 0, "conduct": 0,
+                "file": "No action taken pending greater market stability.",
+                "after":
+                    "Understandable, and it has a cost that does not appear on "
+                    "any statement. You now hold a portfolio that has quietly "
+                    "become more cautious than the one she agreed to, without "
+                    "anyone deciding that. Drift by inaction is still a "
+                    "decision, it is just an undocumented one.",
+            },
+            {
+                "id": "c", "label": "Wait for confirmation of a recovery",
+                "detail": "Add risk once there is evidence the worst is past.",
+                "suitability": -1, "conduct": 0,
+                "file": "Agreed to increase equity once recovery is established.",
+                "after":
+                    "Waiting for confirmation means buying after the move. From "
+                    "9 March to 31 December 2009 global equity rose 74.9%. "
+                    "Confirmation is the most expensive thing you can buy in "
+                    "this job, and it is never on sale.",
+            },
+            {
+                "id": "d", "label": "Stay in cash until this is clearly over",
+                "detail": "You are out. Staying out costs nothing.",
+                "model": "cash",
+                "requires": {"model_in": ["cash"]},
+                "suitability": -2, "conduct": -2,
+                "file": "Remaining in cash pending clearer conditions.",
+                "after":
+                    "This is where a panic exit becomes a permanent loss. Going "
+                    "to cash was one decision and it was survivable. Staying in "
+                    "cash through a 74.9% rally is the second one, and it is the "
+                    "one that actually does the damage.",
+            },
+        ],
+    },
+    # ------------------------------------------------------------------
+    {
+        "id": "d06_retire",
+        "month": "2011-01",
+        "age": 65,
+        "title": "She stops working",
+        "context": [
+            "January 2011. Ruth is 65 and the income starts now: £22,000 a year "
+            "in 2004 money, which after seven years of inflation is about "
+            "£26,100.",
+            "She may be drawing for thirty years. The pot has to fund a rising "
+            "income and survive whatever the next three decades contain.",
+            "2011 will return -5.3% on global equity, so the first year of "
+            "drawing is a falling one.",
+        ],
+        "client": "So this is it. What do I actually live on?",
+        "question": "Set up the drawdown. How is her income actually funded?",
+        "options": [
+            {
+                "id": "a", "label": "Sell units monthly to pay her",
+                "detail": "Keep it simple and stay fully invested.",
+                "suitability": 0, "conduct": 0,
+                "file": "Income commenced. Funded by monthly disposals across "
+                        "the portfolio.",
+                "after":
+                    "Simple, cheap, and fine most of the time. The exposure is "
+                    "that in a bad month you sell assets that have just fallen, "
+                    "which turns a temporary loss into a realised one. That is "
+                    "sequencing risk. It stays completely invisible until March "
+                    "2020, and then it is the only thing that matters.",
+            },
+            {
+                "id": "b", "label": "Set the drawdown allocation and hold two "
+                                    "years of income in cash",
+                "detail": "Ring-fence the income so nothing has to be sold in a "
+                          "falling market.",
+                "model": "balanced",
+                "reserve_years": 2.0,
+                "suitability": 2, "conduct": 2,
+                "file": "Income commenced. Strategic allocation set for a "
+                        "30-year drawdown. Two years' income ring-fenced in cash "
+                        "to avoid forced sales in falling markets, replenished "
+                        "at annual review from whichever asset sits above "
+                        "target.",
+                "after":
+                    "The standard professional arrangement, and the one that "
+                    "earns its keep in 2020. Be precise about why, because an "
+                    "interviewer will push. It removes forced selling, which is "
+                    "a real practical and behavioural gain. The evidence that a "
+                    "cash bucket improves the odds of the money lasting is weak, "
+                    "because cash held for years earns less than the portfolio "
+                    "it was taken from. You are buying calm, not return.",
+            },
+            {
+                "id": "c", "label": "De-risk hard now that she is drawing",
+                "detail": "Income means capital preservation comes first.",
+                "model": "defensive",
+                "suitability": -2, "conduct": 0,
+                "file": "Allocation reduced to Defensive on commencement of "
+                        "income.",
+                "after":
+                    "The instinct is that drawing income means safety. The "
+                    "arithmetic disagrees and the paper measures it: over a "
+                    "thirty-year drawdown, 20% equity lasted in 74% of simulated "
+                    "futures against 92% for 60% equity. You have cut market "
+                    "risk and raised goal risk, and only one of those appears on "
+                    "her statement.",
+            },
+            {
+                "id": "d", "label": "Draw a percentage of the pot, not a fixed sum",
+                "detail": "Her income moves with the portfolio, within "
+                          "guardrails.",
+                "model": "balanced",
+                "withdrawal": "variable",
+                "suitability": 1, "conduct": 1,
+                "file": "Income commenced on a variable basis: 4% of the prior "
+                        "year-end value, subject to a floor of 75% and a cap of "
+                        "125% of the target income. Client advised that income "
+                        "will move with markets and confirmed understanding.",
+                "after":
+                    "A real strategy and the single most effective way to make "
+                    "money last, because it stops the pot funding a fixed sum "
+                    "out of a falling market. The catch is human. It cuts her "
+                    "income in precisely the years she finds frightening, and "
+                    "she has told you what a bad year does to her sleep. Choose "
+                    "it only if the file shows she understood that.",
+            },
+        ],
+    },
+    # ------------------------------------------------------------------
+    {
+        "id": "d07_taper",
+        "month": "2013-06",
+        "age": 67,
+        "title": "Bonds lose money for the first time",
+        "context": [
+            "2013. The aggregate bond index falls 1.9%, its first negative "
+            "calendar year in this dataset, as the Federal Reserve talks about "
+            "slowing its bond buying.",
+            "Equity is having an excellent year and will finish up 22.7%.",
+            "One-to-three year Treasuries return 0.2% over the same year. "
+            "Shorter bonds barely notice what long bonds are feeling.",
+        ],
+        "client": None,
+        "question": "A small warning about interest-rate risk. Do you act on it?",
+        "options": [
+            {
+                "id": "a", "label": "Nothing. One bad year in bonds is noise.",
+                "detail": "Do not rebuild a portfolio around a 1.9% loss.",
+                "suitability": 0, "conduct": 0,
+                "file": "Annual review. No change.",
+                "after":
+                    "Reasonable and, for nine years, correct. Aggregate bonds "
+                    "went on to make money in seven of the next eight calendar "
+                    "years. The bill for ignoring duration does not arrive until "
+                    "2022, and when it does it is 12.4% in a single year.",
+            },
+            {
+                "id": "b", "label": "Shorten duration in the bond sleeve",
+                "detail": "Same equity weight, less interest-rate risk.",
+                "model": "balanced_short",
+                "suitability": 1, "conduct": 1,
+                "file": "Reduced interest-rate sensitivity of the defensive "
+                        "sleeve by moving to short-dated government bonds. "
+                        "Equity weight unchanged.",
+                "after":
+                    "Early, and it costs you. Short bonds returned 1.9% a year "
+                    "over this whole window against 3.0% for aggregate bonds, so "
+                    "you give up return for nine years to avoid a risk that has "
+                    "not arrived. Then 2022 happens: aggregate bonds fall 12.4% "
+                    "and short bonds fall 3.8%. Whether this was foresight or "
+                    "luck is a fair question, and the answer depends entirely on "
+                    "what you wrote in the file today.",
+            },
+            {
+                "id": "c", "label": "Sell the bonds and hold cash instead",
+                "detail": "If bonds can lose money, why hold them?",
+                "model": "cash",
+                "suitability": -2, "conduct": -1,
+                "file": "Bond allocation liquidated to cash.",
+                "after":
+                    "An overreaction that removes the whole defensive sleeve, "
+                    "not just its duration. Cash returned 1.8% a year across this "
+                    "window while she needed considerably more, and in 2020 the "
+                    "bonds you sold would have risen 7.2% while equities fell.",
+            },
+            {
+                "id": "d", "label": "Move the bond money into equity",
+                "detail": "Bonds are the risk now. Equity is doing the work.",
+                "model": "growth",
+                "suitability": -2, "conduct": -1,
+                "file": "Reduced bonds in favour of equity following bond market "
+                        "weakness.",
+                "after":
+                    "She is 68 and drawing an income. Answering a 1.9% loss in "
+                    "the defensive sleeve by adding equity risk is not a "
+                    "solution to the problem she has, and it doubles the size of "
+                    "the problem she will have in 2020.",
+            },
+        ],
+    },
+    # ------------------------------------------------------------------
+    {
+        "id": "d08_grandchildren",
+        "month": "2016-01",
+        "age": 70,
+        "title": "Three grandchildren",
+        "context": [
+            "Ruth is 70 and has been drawing income for five years.",
+            "Markets have been kind since she retired. Global equity returned "
+            "10.8%, 14.7%, 22.7%, 7.4% and about -0.9% across 2010 to 2015.",
+            "She is now thinking about inheritance tax and about being alive to "
+            "see the money used.",
+        ],
+        "client": "I'd like to give the grandchildren £10,000 each. I know about "
+                  "the seven-year rule. I'd rather watch them spend it than have "
+                  "the taxman take a slice.",
+        "question": "£30,000 out of a pot that is already paying her income. "
+                    "What do you do?",
+        "options": [
+            {
+                "id": "a", "label": "Pay it and show the effect on her income",
+                "detail": "Same as last time. Her call, your arithmetic.",
+                "one_off": -30000,
+                "suitability": 1, "conduct": 2,
+                "file": "£30,000 gifted to grandchildren at client's request. "
+                        "Potentially exempt transfer, seven-year rule explained "
+                        "and noted. Illustrated the effect on sustainable "
+                        "income; client accepted. No change to allocation.",
+                "after":
+                    "Consistent with how you handled the first gift, which "
+                    "matters more than either decision on its own. A file that "
+                    "treats the same situation the same way twice is a file that "
+                    "survives being read by someone else.",
+            },
+            {
+                "id": "b", "label": "Pay it and quietly raise the equity weight "
+                                    "to make up the difference",
+                "detail": "Smaller pot, so it has to work harder.",
+                "one_off": -30000,
+                "model": "growth",
+                "suitability": -2, "conduct": -1,
+                "file": "£30,000 gift. Equity weight increased to maintain "
+                        "projected income.",
+                "after":
+                    "This is how a suitable portfolio becomes an unsuitable one "
+                    "without anybody deciding to make it unsuitable. Each step "
+                    "is small and each has a reason. She is 70, drawing income, "
+                    "and now holds 80% equity, and no conversation ever took "
+                    "place about that.",
+            },
+            {
+                "id": "c", "label": "Suggest she gift from income instead, over "
+                                    "several years",
+                "detail": "Smaller regular gifts, less capital gone at once.",
+                "one_off": -10000,
+                "suitability": 2, "conduct": 2,
+                "file": "Client wished to gift £30,000. Discussed funding gifts "
+                        "from surplus income over several years rather than a "
+                        "single capital withdrawal, preserving the capital base "
+                        "that funds her income. Client agreed to £10,000 now and "
+                        "to review annually.",
+                "after":
+                    "The best answer available, and it is not the clever one. It "
+                    "gives her what she wants, protects the thing her income "
+                    "depends on, and it happens to fit the inheritance tax "
+                    "exemption for normal expenditure out of income. Three "
+                    "objectives, one suggestion, no lecture.",
+            },
+            {
+                "id": "d", "label": "Decline until you have run a full cash-flow "
+                                    "plan",
+                "detail": "Do not move £30,000 without modelling it first.",
+                "one_off": 0,
+                "suitability": 0, "conduct": -1,
+                "file": "Gift deferred pending cash-flow analysis.",
+                "after":
+                    "Prudent in form and unhelpful in substance. You already "
+                    "know the shape of the answer: £30,000 from a pot this size, "
+                    "at her draw rate, is affordable and worth showing her in a "
+                    "single conversation. Process used as a delaying tactic is "
+                    "still a delaying tactic.",
+            },
+        ],
+    },
+    # ------------------------------------------------------------------
+    {
+        "id": "d09_fee",
+        "month": "2018-12",
+        "age": 73,
+        "title": "A flat year, and a question about your bill",
+        "context": [
+            "2018 finishes down. Global equity falls 9.2% and bonds return 0.5%, "
+            "so there is nowhere much to hide.",
+            "Ruth is 73 and has been your client for fifteen years. She has paid "
+            "roughly 1% a year on everything, every year, throughout.",
+            "The paper's finding on this is uncomfortable and specific: a 1% "
+            "annual charge consumed about a quarter of the balanced portfolio's "
+            "entire 23-year gain.",
+        ],
+        "client": "My neighbour says he pays a lot less than I do and gets much "
+                  "the same funds. Is he right?",
+        "question": "He is broadly right. What do you do about it?",
+        "options": [
+            {
+                "id": "a", "label": "Explain the value of the service and leave "
+                                    "the fee where it is",
+                "detail": "You have done the job well. The fee is the fee.",
+                "suitability": 0, "conduct": -1,
+                "file": "Discussed charges with client. No change.",
+                "after":
+                    "The honest problem with this answer is that the fee is the "
+                    "one number in her plan that is certain, and everything you "
+                    "have spent fifteen years managing is not. Defending it "
+                    "without moving it is a fair position only if you can say "
+                    "what she got for it, and this file does not say.",
+            },
+            {
+                "id": "b", "label": "Cut the all-in charge to 0.65% by changing "
+                                    "how it is implemented",
+                "detail": "Same strategy, cheaper funds and a lower management "
+                          "charge.",
+                "fee": 0.0065,
+                "suitability": 1, "conduct": 2,
+                "file": "Reviewed total cost of ownership. Reduced all-in annual "
+                        "charge from 1.00% to 0.65% by moving to lower-cost "
+                        "underlying holdings, with no change to strategic "
+                        "allocation. Client informed in writing.",
+                "after":
+                    "The most reliable return you will add all year. It is "
+                    "certain, it compounds, and it required no forecast. Note "
+                    "what it also does: it makes the rest of your work easier to "
+                    "defend, because you are no longer asking her portfolio to "
+                    "clear a hurdle you set yourself.",
+            },
+            {
+                "id": "c", "label": "Cut the fee to 0.65% and take more equity "
+                                    "risk with the saving",
+                "detail": "Pass on the saving and put it to work.",
+                "fee": 0.0065,
+                "model": "growth",
+                "suitability": -2, "conduct": 0,
+                "file": "Charges reduced to 0.65%. Equity weight increased.",
+                "after":
+                    "Half of this is excellent and half of it is unrelated. "
+                    "Cutting the cost was right. Spending the saving on equity "
+                    "risk for a 73-year-old drawing an income is a separate "
+                    "decision that has not been justified anywhere, and pairing "
+                    "them hides the second one inside the first.",
+            },
+            {
+                "id": "d", "label": "Offer to move her to an execution-only "
+                                    "arrangement",
+                "detail": "If the service is not worth the fee, stop charging it.",
+                "fee": 0.0025,
+                "suitability": -1, "conduct": -1,
+                "file": "Client offered execution-only service at 0.25%.",
+                "after":
+                    "Radically cheap and probably wrong for her. The whole "
+                    "argument of this simulator is that the value is in the "
+                    "handling: the 2008 call, the 2020 income, the 2022 letter. "
+                    "Take away the manager and she keeps the fee saving and "
+                    "inherits every one of those decisions alone, at 73.",
+            },
+        ],
+    },
+    # ------------------------------------------------------------------
+    {
+        "id": "d10_covid",
+        "month": "2020-03",
+        "age": 74,
+        "title": "Thirty-three percent in five weeks",
+        "context": [
+            "Between 19 February and 23 March 2020, global equity falls 33.1%. A "
+            "60/40 portfolio falls 20.4%. It is the fastest fall in this entire "
+            "dataset.",
+            "Ruth is 74 and drawing about £30,700 a year. Whatever funds that "
+            "income this month gets sold at these prices.",
+            "Bonds hold up. The aggregate bond index will return 7.2% across "
+            "2020. From 23 March to year end, global equity rises 67.3%.",
+        ],
+        "client": "Not again. I'm 75 next year. I don't have another 2008 in me.",
+        "question": "Her income is due. Where does the money come from?",
+        "options": [
+            {
+                "id": "a", "label": "Sell equities to fund the income",
+                "detail": "Take it from where the money is.",
+                "suitability": -1, "conduct": 0,
+                "file": "Income funded by disposal of equity holdings.",
+                "after":
+                    "This is sequencing risk with the lid off. Selling equities "
+                    "after a 33% fall to pay an income turns a paper loss into a "
+                    "permanent one, and those units are not there for the 67.3% "
+                    "recovery that starts three weeks later.",
+            },
+            {
+                "id": "b", "label": "Draw from the ring-fenced cash. Sell nothing.",
+                "detail": "This is what the reserve was built for.",
+                "requires": {"reserve_min": 0.5},
+                "use_reserve": True,
+                "suitability": 2, "conduct": 2,
+                "file": "Income funded from the ring-fenced cash sleeve. No "
+                        "disposals made into falling markets. Cash sleeve to be "
+                        "replenished at the next review from assets above "
+                        "target.",
+                "after":
+                    "Exactly why it exists. Nine or twelve years earlier you "
+                    "made a decision that felt like administration, and today it "
+                    "means she sells nothing at the bottom. This is what "
+                    "discretionary management looks like when it works: the "
+                    "hardest month requires no decision at all, because the "
+                    "decision was already made.",
+            },
+            {
+                "id": "c", "label": "Move the portfolio to cash and wait",
+                "detail": "She is 74 and frightened. Stop the bleeding.",
+                "model": "cash",
+                "suitability": -2, "conduct": -1,
+                "file": "Portfolio moved to cash at client's distress.",
+                "after":
+                    "The same decision as October 2008, made twelve years later "
+                    "by someone who has already seen how that one ended. Global "
+                    "equity rose 67.3% from 23 March to the end of the year. "
+                    "Being frightened in a crash is normal. Acting on it twice "
+                    "is a pattern.",
+            },
+            {
+                "id": "d", "label": "Suspend her income for six months",
+                "detail": "Protect the capital until this passes.",
+                "suspend_months": 6,
+                "suitability": 0, "conduct": -1,
+                "file": "Income suspended for six months at adviser's "
+                        "suggestion to preserve capital.",
+                "after":
+                    "It protects the pot and it takes away the thing the pot is "
+                    "for. She is 74 and this money is her living. There are "
+                    "clients for whom pausing income is right, and they are the "
+                    "ones with other income to fall back on. She has £6,200 a "
+                    "year and the state pension.",
+            },
+        ],
+    },
+    # ------------------------------------------------------------------
+    {
+        "id": "d11_duration",
+        "month": "2021-01",
+        "age": 75,
+        "title": "The cushion is priced for nothing",
+        "context": [
+            "January 2021. Bond yields are close to the lowest on record. The "
+            "aggregate bond index returned -1.6% in 2021.",
+            "The defensive sleeve is meant to protect her. At these yields it "
+            "offers very little income and a great deal of interest-rate "
+            "sensitivity.",
+            "In 2022, aggregate bonds fall 12.4% and one-to-three year "
+            "Treasuries fall 3.8%. You cannot see that from here, but you can "
+            "see the yields.",
+        ],
+        "client": None,
+        "question": "The protection looks expensive. Do you change its shape?",
+        "options": [
+            {
+                "id": "a", "label": "Leave it. Bonds are the ballast.",
+                "detail": "Do not tinker with the defensive sleeve on a view "
+                          "about yields.",
+                "suitability": 0, "conduct": 0,
+                "file": "Annual review. No change to defensive allocation.",
+                "after":
+                    "The orthodox answer, and 2022 charges 12.4% for it. In "
+                    "fairness, the same orthodoxy is why the sleeve returned 7.2% "
+                    "in 2020 when she needed it. The honest reading is that this "
+                    "was a real judgment call with a real cost either way, not "
+                    "an obvious mistake.",
+            },
+            {
+                "id": "b", "label": "Shorten duration. Same equity, shorter bonds.",
+                "detail": "Keep the defensive sleeve. Cut the interest-rate risk "
+                          "inside it.",
+                "model": "balanced_short",
+                "suitability": 2, "conduct": 1,
+                "file": "Reviewed the defensive sleeve at historically low "
+                        "yields. Reduced duration by moving to short-dated "
+                        "government bonds, on the basis that the sleeve was "
+                        "carrying interest-rate risk disproportionate to the "
+                        "yield it offered. Equity weight unchanged.",
+                "after":
+                    "The best available defensive move of the whole simulation, "
+                    "and the reasoning holds up whether or not 2022 had "
+                    "happened: you were being paid almost nothing to carry a lot "
+                    "of duration. Short bonds fell 3.8% in 2022 against 12.4% "
+                    "for aggregate. Say the reason was the yield, not a forecast "
+                    "of rates.",
+            },
+            {
+                "id": "c", "label": "Replace bonds with cash",
+                "detail": "If bonds cannot protect, hold the real thing.",
+                "model": "cash",
+                "suitability": -2, "conduct": -1,
+                "file": "Defensive sleeve moved to cash.",
+                "after":
+                    "This throws out the growth engine along with the duration. "
+                    "Moving the entire portfolio to cash at 75, with fifteen "
+                    "years of inflation-linked income still to fund, does far "
+                    "more damage to her goal than 2022 ever could.",
+            },
+            {
+                "id": "d", "label": "Cut bonds and hold more equity instead",
+                "detail": "If the ballast does not work, own more of what grows.",
+                "model": "growth",
+                "suitability": -2, "conduct": -1,
+                "file": "Bond weighting reduced in favour of equity.",
+                "after":
+                    "Understandable and badly timed. She is 75 and drawing. "
+                    "Global equity fell 17.8% in 2022 and the sleeve you removed "
+                    "would have been the thing funding her income through it.",
+            },
+        ],
+    },
+    # ------------------------------------------------------------------
+    {
+        "id": "d12_letter",
+        "month": "2022-10",
+        "age": 77,
+        "title": "She writes to you",
+        "context": [
+            "2022. Aggregate bonds fall 12.4% and global equity falls 17.8%. "
+            "They fall together, which is the one thing a cautious portfolio is "
+            "built on the assumption they will not do.",
+            "A 40% equity portfolio loses 14.6% across the year. That is 82% as "
+            "large as the all-equity loss. In 2008 the same comparison was 29%.",
+            "The mechanism is measurable. The rolling correlation between "
+            "equities and bonds averaged -0.14 from 2004 to 2021 and +0.23 from "
+            "2022, and it was positive on 96% of days.",
+        ],
+        "client": "You told me the bonds were there to protect me. They fell "
+                  "almost as much as the shares. I would like an explanation I "
+                  "can understand, in writing.",
+        "question": "This one is not a portfolio decision. What do you write?",
+        "options": [
+            {
+                "id": "a", "label": "It was an exceptional year for markets",
+                "detail": "Reassure her that these things happen and pass.",
+                "suitability": 0, "conduct": -2,
+                "file": "Wrote to client explaining unusual market conditions.",
+                "after":
+                    "True and useless. It tells her nothing she could not get "
+                    "from a newspaper, and her question was specific: why did "
+                    "the safe part not behave safely? A non-answer to a precise "
+                    "question is how a fifteen-year relationship quietly ends.",
+            },
+            {
+                "id": "b", "label": "Explain the correlation flip, with the "
+                                    "numbers, and change nothing",
+                "detail": "Tell her exactly why the cushion failed and why the "
+                          "strategy still stands.",
+                "suitability": 1, "conduct": 2,
+                "file": "Wrote to client explaining that the equity-bond "
+                        "correlation moved from around -0.14 over 2004 to 2021 "
+                        "to around +0.23 from 2022, so both legs fell together, "
+                        "and that this reflected rising interest rates hitting "
+                        "both asset classes at once. Confirmed the strategic "
+                        "allocation remains appropriate for her horizon and "
+                        "income requirement, and that no change is proposed on "
+                        "the basis of a single year.",
+                "after":
+                    "This is the answer, and it is the reason the underlying "
+                    "analysis exists at all. A manager who can say why the "
+                    "cushion failed, with a number, keeps the client and keeps "
+                    "the strategy. One who cannot loses both, usually in that "
+                    "order.",
+            },
+            {
+                "id": "c", "label": "De-risk further so she feels safer",
+                "detail": "She is 77 and upset. Reduce the risk.",
+                "model": "defensive",
+                "suitability": -2, "conduct": -1,
+                "file": "Allocation reduced following client concern about "
+                        "losses.",
+                "after":
+                    "Acting to make a conversation easier is how a suitable "
+                    "portfolio becomes an unsuitable one. She is 77, drawing an "
+                    "income, with fifteen years to fund. This locks in the fall "
+                    "and cuts the return that the remaining fifteen years "
+                    "depend on. It also does not answer her question.",
+            },
+            {
+                "id": "d", "label": "Apologise, accept the strategy failed, move "
+                                    "to cash",
+                "detail": "She trusted you and lost money. Own it.",
+                "model": "cash",
+                "suitability": -2, "conduct": -2,
+                "file": "Strategy accepted as unsuccessful. Portfolio moved to "
+                        "cash.",
+                "after":
+                    "Accountability aimed at the wrong target. The strategy did "
+                    "not fail, one assumption inside it stopped holding for a "
+                    "year, and the difference is the entire content of your job. "
+                    "Moving a 77-year-old's income portfolio to cash after the "
+                    "fall converts a bad year into a permanent one.",
+            },
+        ],
+    },
+    # ------------------------------------------------------------------
+    {
+        "id": "d13_concentration",
+        "month": "2024-01",
+        "age": 78,
+        "title": "The concentration nobody chose",
+        "context": [
+            "In 2023 the cap-weighted S&P 500 returned 26.7% against 13.8% for "
+            "its equal-weighted twin, a gap of 12.9 points. 2024 will repeat it: "
+            "25.6% against 12.8%.",
+            "Her US equity sleeve holds the cap-weighted index, so it is far "
+            "more concentrated in a handful of very large companies than the one "
+            "she was profiled into in 2004.",
+            "Nothing on her statement changed. Her risk label is the same word "
+            "it was twenty years ago.",
+        ],
+        "client": None,
+        "question": "A risk she never agreed to take has grown inside a holding "
+                    "she did agree to. Do you act?",
+        "options": [
+            {
+                "id": "a", "label": "Nothing. It has been working.",
+                "detail": "Do not fix what is paying for her retirement.",
+                "suitability": 0, "conduct": 0,
+                "file": "Annual review. No change.",
+                "after":
+                    "An honest position, and in this sample it has been the "
+                    "profitable one. What the file should still record is that "
+                    "you noticed. Noticing and deciding not to act is a "
+                    "defensible position. Not noticing is not.",
+            },
+            {
+                "id": "b", "label": "Move the US sleeve to equal weight",
+                "detail": "Same equity weight. Spread it across more companies.",
+                "model": "balanced_ew",
+                "suitability": 1, "conduct": 2,
+                "file": "Noted rising concentration in cap-weighted US equity. "
+                        "Moved the US sleeve to an equal-weighted "
+                        "implementation to reduce single-name concentration, "
+                        "with no change to overall equity weight. Client "
+                        "informed of the rationale and of the tracking "
+                        "difference this introduces.",
+                "after":
+                    "You have cut a risk she never agreed to take, and it is not "
+                    "free. Across this whole window the equal-weighted sleeve "
+                    "returned slightly less with slightly higher volatility, and "
+                    "it lagged the cap-weighted index badly in both 2023 and "
+                    "2024. That is what acting on concentration actually costs, "
+                    "and an interviewer will ask you for the number.",
+            },
+            {
+                "id": "c", "label": "Cut her equity weight instead",
+                "detail": "If the equity is riskier, hold less of it.",
+                "model": "cautious",
+                "suitability": -1, "conduct": 0,
+                "file": "Equity weight reduced in response to market "
+                        "concentration.",
+                "after":
+                    "This treats a concentration problem as a risk-level "
+                    "problem. It cuts the growth she still needs for fifteen "
+                    "years of income and leaves the remaining equity just as "
+                    "concentrated as it was.",
+            },
+            {
+                "id": "d", "label": "Lean into it",
+                "detail": "The largest companies are winning. Own more of them.",
+                "model": "growth",
+                "suitability": -2, "conduct": -1,
+                "file": "Equity weight increased following strong returns from "
+                        "large-cap US equity.",
+                "after":
+                    "Two years of very strong returns from a narrow group of "
+                    "companies is the least reliable moment to concentrate "
+                    "further, and she is 78 with an income to fund. This is the "
+                    "2007 decision wearing different clothes.",
+            },
+        ],
+    },
+]

@@ -1,0 +1,1009 @@
+<style>
+/* ---------------------------------------------------------------------------
+   The Manager's Seat
+
+   Design notes, so the choices are arguable rather than accidental.
+
+   The subject is a client file that runs from 2004 to today, so the page is
+   built as a dated file rather than as a dashboard: a single column with a
+   timeline spine, entries stamped with a month and an age, and typed file
+   notes set in mono because that is what a file note looks like. Time is real
+   structure here, not decoration, which is why the entries are dated and
+   numbered rather than dressed with arbitrary markers.
+
+   Palette is indigo ink on cool stone. Private-client work in the UK is a
+   navy-and-paper world and the neutrals are pulled toward the ink rather than
+   left as flat grey. Gain, loss and caution are kept deliberately away from
+   the accent so that a number reading green never gets confused with a
+   heading reading indigo.
+
+   Three typographic roles, each doing a different job: a serif for the things
+   Ruth actually says and for entry titles, a grotesque for explanation, and a
+   mono for anything that is data or that came out of a file.
+--------------------------------------------------------------------------- */
+
+:root {
+  --ink:        #171d2b;
+  --ink-soft:   #47506a;
+  --ink-faint:  #7a8299;
+  --paper:      #eceef2;
+  --paper-raise:#f7f8fa;
+  --rule:       #d2d6e0;
+  --accent:     #2b3a63;
+  --accent-lift:#42568c;
+  --gain:       #2f6a4f;
+  --loss:       #8e3b33;
+  --caution:    #9a6a1c;
+  --shadow:     0 1px 2px rgba(23,29,43,.06), 0 8px 24px rgba(23,29,43,.06);
+
+  --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  --step--1: clamp(.78rem, .76rem + .1vw, .84rem);
+  --step-0:  clamp(1rem, .97rem + .15vw, 1.06rem);
+  --step-1:  clamp(1.18rem, 1.12rem + .3vw, 1.35rem);
+  --step-2:  clamp(1.42rem, 1.32rem + .5vw, 1.75rem);
+  --step-3:  clamp(1.75rem, 1.55rem + .9vw, 2.4rem);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink:        #e6e9f2;
+    --ink-soft:   #a7aec4;
+    --ink-faint:  #767e96;
+    --paper:      #10141d;
+    --paper-raise:#182031;
+    --rule:       #2b3448;
+    --accent:     #9db2e8;
+    --accent-lift:#c2d0f4;
+    --gain:       #6bbd93;
+    --loss:       #d98a80;
+    --caution:    #d6a94e;
+    --shadow:     0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"] {
+  --ink:        #e6e9f2;
+  --ink-soft:   #a7aec4;
+  --ink-faint:  #767e96;
+  --paper:      #10141d;
+  --paper-raise:#182031;
+  --rule:       #2b3448;
+  --accent:     #9db2e8;
+  --accent-lift:#c2d0f4;
+  --gain:       #6bbd93;
+  --loss:       #d98a80;
+  --caution:    #d6a94e;
+  --shadow:     0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+}
+:root[data-theme="light"] {
+  --ink:        #171d2b;
+  --ink-soft:   #47506a;
+  --ink-faint:  #7a8299;
+  --paper:      #eceef2;
+  --paper-raise:#f7f8fa;
+  --rule:       #d2d6e0;
+  --accent:     #2b3a63;
+  --accent-lift:#42568c;
+  --gain:       #2f6a4f;
+  --loss:       #8e3b33;
+  --caution:    #9a6a1c;
+  --shadow:     0 1px 2px rgba(23,29,43,.06), 0 8px 24px rgba(23,29,43,.06);
+}
+
+* { box-sizing: border-box; }
+
+/* The sections below carry display:flex, and an author display rule beats the
+   browser's own [hidden] rule, so hiding a section would silently do nothing
+   without this. */
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+}
+
+.wrap {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 0 1.1rem 5rem;
+}
+
+/* ---- masthead ---------------------------------------------------------- */
+
+.masthead {
+  border-bottom: 1px solid var(--rule);
+  padding: 2.4rem 0 1.4rem;
+  margin-bottom: 1.8rem;
+}
+.masthead .eyebrow {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 .7rem;
+}
+.masthead h1 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: var(--step-3);
+  line-height: 1.08;
+  letter-spacing: -.015em;
+  margin: 0 0 .6rem;
+  text-wrap: balance;
+}
+.masthead p {
+  margin: 0;
+  color: var(--ink-soft);
+  max-width: 34rem;
+}
+
+/* ---- generic type ------------------------------------------------------ */
+
+h2 {
+  font-family: var(--serif);
+  font-size: var(--step-2);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -.01em;
+  margin: 0 0 .5rem;
+  text-wrap: balance;
+}
+h3 {
+  font-size: var(--step-1);
+  font-weight: 650;
+  line-height: 1.25;
+  margin: 0 0 .4rem;
+  text-wrap: balance;
+}
+p { margin: 0 0 .85rem; }
+p:last-child { margin-bottom: 0; }
+
+.label {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.stack { display: flex; flex-direction: column; gap: 1.1rem; }
+.stack-tight { display: flex; flex-direction: column; gap: .55rem; }
+
+.card {
+  background: var(--paper-raise);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 1.1rem 1.15rem;
+  box-shadow: var(--shadow);
+}
+
+.num { font-variant-numeric: tabular-nums; font-family: var(--mono); }
+
+/* ---- the brief --------------------------------------------------------- */
+
+.brief-intro { font-size: var(--step-1); line-height: 1.5; color: var(--ink); }
+.brief-intro strong { font-weight: 650; }
+
+.profile { display: flex; flex-direction: column; gap: .9rem; margin: 0; }
+.profile div { display: flex; flex-direction: column; gap: .15rem; }
+.profile dt {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.profile dd { margin: 0; color: var(--ink-soft); }
+
+.scored { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .8rem; }
+.scored li { display: flex; gap: .8rem; align-items: baseline; }
+.scored .k {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--accent);
+  flex: 0 0 6.6rem;
+}
+.scored .v { color: var(--ink-soft); flex: 1; min-width: 0; }
+
+/* ---- buttons ----------------------------------------------------------- */
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 3px;
+}
+button:focus-visible,
+a:focus-visible { outline: 2px solid var(--accent-lift); outline-offset: 2px; }
+
+.primary {
+  background: var(--accent);
+  color: var(--paper-raise);
+  border: 1px solid var(--accent);
+  padding: .8rem 1.3rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+  width: 100%;
+}
+:root[data-theme="dark"] .primary,
+:root:not([data-theme="light"]) .primary { }
+@media (prefers-color-scheme: dark) {
+  .primary { color: #10141d; }
+}
+:root[data-theme="dark"] .primary { color: #10141d; }
+:root[data-theme="light"] .primary { color: #f7f8fa; }
+.primary:hover { background: var(--accent-lift); border-color: var(--accent-lift); }
+
+.ghost {
+  background: transparent;
+  border: 1px solid var(--rule);
+  padding: .6rem 1rem;
+  color: var(--ink-soft);
+}
+.ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ---- the tape ---------------------------------------------------------- */
+
+.tape {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+  padding: .7rem 0 .6rem;
+  margin-bottom: 1.4rem;
+}
+.tape-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: .8rem;
+  margin-bottom: .35rem;
+}
+.tape-when { font-family: var(--mono); font-size: var(--step--1); letter-spacing: .08em; color: var(--ink-faint); text-transform: uppercase; }
+.tape-value { font-family: var(--mono); font-size: var(--step-1); font-weight: 600; font-variant-numeric: tabular-nums; }
+.tape-chart { display: block; width: 100%; height: 46px; }
+.tape-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem .6rem;
+  margin-top: .45rem;
+}
+
+.chip {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: .1rem .45rem;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.chip.warn { border-color: var(--caution); color: var(--caution); }
+.chip.good { border-color: var(--gain); color: var(--gain); }
+.chip.bad  { border-color: var(--loss); color: var(--loss); }
+
+/* ---- an entry ---------------------------------------------------------- */
+
+.entry { position: relative; padding-left: 1.5rem; }
+.entry::before {
+  content: "";
+  position: absolute;
+  left: .28rem; top: .55rem; bottom: 0;
+  width: 1px;
+  background: var(--rule);
+}
+.entry::after {
+  content: "";
+  position: absolute;
+  left: 0; top: .45rem;
+  width: .58rem; height: .58rem;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.entry-stamp {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 .3rem;
+}
+.entry h2 { margin-bottom: .8rem; }
+.context { color: var(--ink-soft); }
+.context p { margin-bottom: .7rem; }
+
+blockquote.says {
+  margin: 1.1rem 0;
+  padding: .1rem 0 .1rem 1rem;
+  border-left: 2px solid var(--accent);
+  font-family: var(--serif);
+  font-size: var(--step-1);
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.question {
+  font-weight: 650;
+  margin: 1.2rem 0 .9rem;
+  color: var(--ink);
+}
+
+.options { display: flex; flex-direction: column; gap: .55rem; }
+.option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--paper-raise);
+  border: 1px solid var(--rule);
+  padding: .8rem .9rem;
+  transition: border-color .12s ease, transform .12s ease;
+}
+.option:hover { border-color: var(--accent); }
+.option:active { transform: translateY(1px); }
+.option .ol { display: flex; gap: .6rem; align-items: baseline; }
+.option .oid {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  color: var(--accent);
+  flex: 0 0 auto;
+}
+.option .otitle { font-weight: 600; line-height: 1.35; }
+.option .odetail {
+  display: block;                 /* inline margins would not hold the indent
+                                     on wrapped lines */
+  color: var(--ink-soft);
+  font-size: var(--step--1);
+  margin: .3rem 0 0 1.55rem;
+  line-height: 1.45;
+}
+
+/* ---- the consequence --------------------------------------------------- */
+
+.outcome { margin-top: 1.2rem; }
+.outcome .chosen {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: .5rem;
+}
+.outcome .verdict { border-left: 2px solid var(--accent); padding-left: 1rem; }
+.filenote {
+  margin-top: 1rem;
+  background: var(--paper-raise);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--ink-faint);
+  padding: .75rem .9rem;
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+.filenote .label { display: block; margin-bottom: .35rem; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal { animation: rise .28s ease both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+}
+
+/* ---- debrief ----------------------------------------------------------- */
+
+.headline-figure {
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+  padding: 1.2rem 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.headline-figure .big {
+  font-family: var(--mono);
+  font-size: var(--step-3);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+}
+.headline-figure .cap { color: var(--ink-soft); font-size: var(--step--1); }
+
+.figures { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; }
+.figures .fig { display: flex; flex-direction: column; gap: .1rem; }
+.figures .fv { font-family: var(--mono); font-size: var(--step-1); font-weight: 600; font-variant-numeric: tabular-nums; }
+.figures .fk { font-size: var(--step--1); color: var(--ink-faint); line-height: 1.35; }
+
+.score { display: flex; flex-direction: column; gap: .3rem; }
+.score-head { display: flex; justify-content: space-between; align-items: baseline; gap: .6rem; }
+.score-name { font-weight: 650; }
+.score-val { font-family: var(--mono); font-size: var(--step--1); color: var(--ink-soft); }
+.meter { height: 6px; background: var(--rule); border-radius: 3px; overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--accent); }
+.meter i.good { background: var(--gain); }
+.meter i.warn { background: var(--caution); }
+.meter i.bad { background: var(--loss); }
+.score-note { font-size: var(--step--1); color: var(--ink-soft); }
+
+.compare-chart { display: block; width: 100%; height: 190px; }
+.legend { display: flex; flex-wrap: wrap; gap: .4rem .9rem; margin-top: .5rem; }
+.legend span { display: inline-flex; align-items: center; gap: .35rem; font-size: var(--step--1); color: var(--ink-soft); }
+.legend i { width: 14px; height: 2px; display: inline-block; }
+
+.scroller { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
+th, td { text-align: right; padding: .45rem .5rem; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+thead th { color: var(--ink-faint); font-weight: 600; font-family: var(--mono); font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; }
+td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+tr.you td { font-weight: 700; }
+
+.letter {
+  background: var(--paper-raise);
+  border: 1px solid var(--rule);
+  padding: 1.2rem 1.15rem;
+  font-family: var(--serif);
+  line-height: 1.65;
+}
+.letter .from { font-family: var(--mono); font-size: var(--step--1); color: var(--ink-faint); margin-bottom: .9rem; }
+.letter p { margin-bottom: .8rem; }
+
+.file-list { display: flex; flex-direction: column; gap: .6rem; }
+.file-row {
+  display: grid;
+  grid-template-columns: 4.6rem 1fr;
+  gap: .7rem;
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  line-height: 1.55;
+  color: var(--ink-soft);
+  padding-bottom: .6rem;
+  border-bottom: 1px solid var(--rule);
+}
+.file-row:last-child { border-bottom: 0; }
+.file-row .fd { color: var(--accent); }
+
+.footnote { color: var(--ink-faint); font-size: var(--step--1); line-height: 1.6; }
+.footnote a { color: var(--accent); }
+
+hr.div { border: 0; border-top: 1px solid var(--rule); margin: 2rem 0; }
+
+.actions { display: flex; flex-direction: column; gap: .6rem; }
+@media (min-width: 30rem) {
+  .actions { flex-direction: row; }
+  .actions button { flex: 1; }
+}
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">A private client, 2004 to 2026</p>
+    <h1>The Manager's Seat</h1>
+    <p>You have one client and twenty-two years. Real market history, thirteen
+       decisions, and two kinds of risk that do not move together.</p>
+  </header>
+
+  <!-- ================= brief ================= -->
+  <section id="brief" class="stack">
+    <p class="brief-intro" id="intro-text"></p>
+
+    <div class="card">
+      <p class="label" style="margin:0 0 .8rem">The file so far</p>
+      <dl class="profile" id="profile"></dl>
+    </div>
+
+    <div>
+      <p class="label" style="margin:0 0 .8rem">What gets scored</p>
+      <ul class="scored">
+        <li><span class="k">Outcome</span><span class="v">Whether the money does
+          the job. The pot she has at the end, and the odds her income lasts to
+          95.</span></li>
+        <li><span class="k">Suitability</span><span class="v">Whether what she
+          held was ever defensible for her age, horizon and income need. Measured
+          on the portfolio's real weights, not on its label.</span></li>
+        <li><span class="k">Conduct</span><span class="v">How she was treated.
+          Whether you explained, recorded, and stayed straight with her when it
+          was uncomfortable.</span></li>
+      </ul>
+    </div>
+
+    <button class="primary" id="start">Take the seat</button>
+
+    <p class="footnote" id="provenance"></p>
+  </section>
+
+  <!-- ================= play ================= -->
+  <section id="play" hidden>
+    <div class="tape">
+      <div class="tape-head">
+        <span class="tape-when" id="tape-when"></span>
+        <span class="tape-value" id="tape-value"></span>
+      </div>
+      <svg class="tape-chart" id="tape-chart" viewBox="0 0 320 46"
+           preserveAspectRatio="none" aria-hidden="true"></svg>
+      <div class="tape-foot" id="tape-foot"></div>
+    </div>
+
+    <article class="entry" id="entry"></article>
+  </section>
+
+  <!-- ================= debrief ================= -->
+  <section id="debrief" hidden></section>
+
+</div>
+
+<script>
+window.GAME = /*__GAME_DATA__*/null/*__END_GAME_DATA__*/;
+</script>
+<script>
+/*__ENGINE__*/
+</script>
+<script>
+(function () {
+  "use strict";
+
+  var D = window.GAME;
+  var E = window.Engine;
+  var picks = {};
+  var step = 0;
+  var answered = false;
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---- formatting ---- */
+  function money(v) {
+    var n = Math.round(v);
+    return "£" + n.toLocaleString("en-GB");
+  }
+  function moneyShort(v) {
+    if (Math.abs(v) >= 1e6) return "£" + (v / 1e6).toFixed(2) + "m";
+    if (Math.abs(v) >= 1e3) return "£" + Math.round(v / 1e3) + "k";
+    return "£" + Math.round(v);
+  }
+  function pct(v, dp) { return (v * 100).toFixed(dp === undefined ? 0 : dp) + "%"; }
+  function monthName(m) {
+    var names = ["January", "February", "March", "April", "May", "June", "July",
+                 "August", "September", "October", "November", "December"];
+    var p = m.split("-");
+    return names[Number(p[1]) - 1] + " " + p[0];
+  }
+  function ageAt(month) {
+    var y = Number(month.slice(0, 4)), m = Number(month.slice(5));
+    return y - D.client.born - (m < D.client.birth_month ? 1 : 0);
+  }
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;");
+  }
+
+  /* ---- charts ---- */
+  function linePath(values, w, h, pad) {
+    var lo = Infinity, hi = -Infinity, i;
+    for (i = 0; i < values.length; i++) {
+      if (values[i] < lo) lo = values[i];
+      if (values[i] > hi) hi = values[i];
+    }
+    if (!isFinite(lo)) { lo = 0; hi = 1; }
+    if (hi === lo) hi = lo + 1;
+    var span = hi - lo;
+    var pts = [];
+    for (i = 0; i < values.length; i++) {
+      var x = values.length === 1 ? 0 : (i / (values.length - 1)) * w;
+      var y = pad + (1 - (values[i] - lo) / span) * (h - 2 * pad);
+      pts.push((i === 0 ? "M" : "L") + x.toFixed(2) + " " + y.toFixed(2));
+    }
+    return { d: pts.join(" "), lo: lo, hi: hi };
+  }
+
+  function drawTape(state, upto) {
+    var vals = state.series.value.slice(0, upto + 1);
+    var svg = $("tape-chart");
+    var w = 320, h = 46;
+    var p = linePath(vals, w, h, 4);
+    var area = p.d + " L" + w + " " + h + " L0 " + h + " Z";
+    svg.innerHTML =
+      '<path d="' + area + '" fill="var(--accent)" opacity=".10"></path>' +
+      '<path d="' + p.d + '" fill="none" stroke="var(--accent)" ' +
+      'stroke-width="1.5" vector-effect="non-scaling-stroke" ' +
+      'stroke-linejoin="round"></path>';
+  }
+
+  function bandAt(month) {
+    for (var i = 0; i < D.client.bands.length; i++) {
+      var b = D.client.bands[i];
+      if (month >= b.from && month <= b.to) return b;
+    }
+    return null;
+  }
+
+  function drawStatus(state, idx, month) {
+    $("tape-when").textContent = monthName(month) + " · she is " + ageAt(month);
+    $("tape-value").textContent = money(state.series.value[idx]);
+
+    var model = state.series.model[idx];
+    var eq = state.series.equity[idx];
+    var reserve = state.series.reserve[idx];
+    var band = bandAt(month);
+    var out = [];
+    out.push('<span class="chip">' + esc(D.market.labels[model]) + "</span>");
+
+    var cls = "chip";
+    if (band && (eq < band.min || eq > band.max)) cls = "chip warn";
+    out.push('<span class="' + cls + '">equity ' + pct(eq) +
+             (band ? " · band " + pct(band.min) + "-" + pct(band.max) : "") +
+             "</span>");
+
+    if (reserve > 1) {
+      out.push('<span class="chip good">cash reserve ' + moneyShort(reserve) +
+               "</span>");
+    }
+    $("tape-foot").innerHTML = out.join("");
+  }
+
+  /* ---- play ---- */
+  function currentState() { return E.run(D, picks); }
+
+  function renderStep() {
+    var d = D.decisions[step];
+    var idx = D.market.months.indexOf(d.month);
+    var before = currentState();
+    var showIdx = Math.max(idx - 1, 0);
+
+    drawTape(before, showIdx);
+    drawStatus(before, showIdx, D.market.months[showIdx]);
+
+    var html = [];
+    html.push('<p class="entry-stamp">Decision ' + (step + 1) + " of " +
+              D.decisions.length + " · " + monthName(d.month) + "</p>");
+    html.push("<h2>" + esc(d.title) + "</h2>");
+    html.push('<div class="context">');
+    d.context.forEach(function (c) { html.push("<p>" + esc(c) + "</p>"); });
+    html.push("</div>");
+    if (d.client) {
+      html.push('<blockquote class="says">' + esc(d.client) + "</blockquote>");
+    }
+    html.push('<p class="question">' + esc(d.question) + "</p>");
+
+    var opts = E.availableOptions(D, picks, d);
+    html.push('<div class="options" id="options">');
+    opts.forEach(function (o) {
+      html.push('<button class="option" data-opt="' + o.id + '">' +
+        '<span class="ol"><span class="oid">' + o.id.toUpperCase() + "</span>" +
+        '<span class="otitle">' + esc(o.label) + "</span></span>" +
+        (o.detail ? '<span class="odetail">' + esc(o.detail) + "</span>" : "") +
+        "</button>");
+    });
+    html.push("</div>");
+    html.push('<div id="outcome"></div>');
+
+    $("entry").innerHTML = html.join("");
+    answered = false;
+
+    Array.prototype.forEach.call(
+      $("entry").querySelectorAll(".option"), function (btn) {
+        btn.addEventListener("click", function () {
+          choose(d, btn.getAttribute("data-opt"));
+        });
+      });
+    window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+  }
+
+  function choose(d, optId) {
+    if (answered) return;
+    answered = true;
+    picks[d.id] = optId;
+
+    var opt = null;
+    d.options.forEach(function (o) { if (o.id === optId) opt = o; });
+
+    $("options").innerHTML = "";
+    var after = currentState();
+    var idx = D.market.months.indexOf(d.month);
+    drawTape(after, idx);
+    drawStatus(after, idx, d.month);
+
+    var last = step === D.decisions.length - 1;
+    var html = [];
+    html.push('<div class="outcome reveal">');
+    html.push('<p class="chosen">You chose ' + optId.toUpperCase() + " · " +
+              esc(opt.label) + "</p>");
+    html.push('<div class="verdict"><p>' + esc(opt.after) + "</p></div>");
+    if (opt.file) {
+      html.push('<div class="filenote"><span class="label">Client file</span>' +
+                esc(opt.file) + "</div>");
+    }
+    html.push('<div style="margin-top:1.4rem">');
+    html.push('<button class="primary" id="next">' +
+              (last ? "See how it went" : "Next") + "</button></div>");
+    html.push("</div>");
+    $("outcome").innerHTML = html.join("");
+
+    $("next").addEventListener("click", function () {
+      if (last) { showDebrief(); }
+      else { step++; renderStep(); }
+    });
+  }
+
+  /* ---- debrief ---- */
+  function verdictFor(share) {
+    if (share >= 0.8) return { cls: "good", word: "Strong" };
+    if (share >= 0.5) return { cls: "", word: "Defensible" };
+    if (share >= 0.25) return { cls: "warn", word: "Questionable" };
+    return { cls: "bad", word: "Indefensible" };
+  }
+
+  function letterFor(you) {
+    var c = D.client;
+    var lines = [];
+    var lasts = you.survival;
+    lines.push("Dear Ruth,");
+    lines.push("This is the twenty-second annual review of the portfolio you " +
+               "opened in January 2004 with " + money(c.pot) + ". It is now " +
+               "worth " + money(you.finalValue) + ", after " +
+               money(you.totalFees) + " in charges over the period and after " +
+               "the income you have drawn since 2011.");
+
+    if (you.ruinMonth !== null) {
+      lines.push("I have to be direct about the position. The portfolio has " +
+                 "not been able to pay your income in full, and that is the " +
+                 "consequence of decisions taken across the period rather than " +
+                 "of any single year.");
+    } else if (lasts >= 0.9) {
+      lines.push("On your current income of " + money(you.finalIncome) +
+                 " a year, the portfolio is drawing " + pct(you.drawRate, 1) +
+                 " of its value. Testing that against every fifteen-year " +
+                 "stretch this data can produce, the income lasts to 95 in " +
+                 pct(lasts) + " of them. That is a comfortable position and " +
+                 "there is no change I would propose.");
+    } else if (lasts >= 0.6) {
+      lines.push("On your current income of " + money(you.finalIncome) +
+                 " a year, the portfolio is drawing " + pct(you.drawRate, 1) +
+                 " of its value. Tested against every fifteen-year stretch " +
+                 "this data can produce, the income lasts to 95 in " +
+                 pct(lasts) + " of them. That is workable but it has less " +
+                 "margin than I would like, and I would rather discuss it now " +
+                 "than in five years.");
+    } else {
+      lines.push("On your current income of " + money(you.finalIncome) +
+                 " a year, the portfolio is drawing " + pct(you.drawRate, 1) +
+                 " of its value. Tested against every fifteen-year stretch " +
+                 "this data can produce, the income lasts to 95 in only " +
+                 pct(lasts) + " of them. I am not comfortable with that and we " +
+                 "need to talk about either the income or the strategy.");
+    }
+
+    if (you.breachMonths > 24) {
+      lines.push("I should also record that for " +
+                 Math.round(you.breachMonths / 12) + " years of this period " +
+                 "the portfolio held an equity weight outside the range I " +
+                 "would now consider appropriate for your circumstances. That " +
+                 "is a matter for me rather than for you, and I am raising it " +
+                 "because you should hear it from me first.");
+    }
+
+    lines.push("As always, I am happy to go through any of this on the phone " +
+               "or in person.");
+    return lines;
+  }
+
+  function showDebrief() {
+    $("play").hidden = true;
+    var sec = $("debrief");
+    sec.hidden = false;
+
+    var you = currentState();
+    var runs = [{ key: "you", label: "Your file", blurb: "", result: you,
+                  colour: "var(--accent)" }];
+    var colours = ["var(--ink-faint)", "var(--loss)", "var(--gain)"];
+    var i = 0;
+    for (var key in D.comparisons) {
+      if (!D.comparisons.hasOwnProperty(key)) continue;
+      var c = D.comparisons[key];
+      runs.push({ key: key, label: c.label, blurb: c.blurb,
+                  result: E.run(D, c.picks), colour: colours[i++] });
+    }
+
+    var h = [];
+    h.push('<header class="masthead" style="padding-top:1.6rem">' +
+           '<p class="eyebrow">July 2026 · she is ' + D.client.age_at_end +
+           "</p><h1>How it went</h1></header>");
+
+    h.push('<div class="stack">');
+
+    h.push('<div class="headline-figure"><span class="big">' +
+           money(you.finalValue) + '</span><span class="cap">left in the ' +
+           "portfolio, from " + money(D.client.pot) + " twenty-two years ago, " +
+           "after every charge and every pound of income she drew.</span></div>");
+
+    h.push('<div class="figures">');
+    h.push('<div class="fig"><span class="fv">' + pct(you.survival) +
+           '</span><span class="fk">chance her income lasts to 95, at ' +
+           pct(you.drawRate, 1) + " of the pot</span></div>");
+    h.push('<div class="fig"><span class="fv">' + money(you.totalFees) +
+           '</span><span class="fk">taken in charges over the period</span></div>');
+    h.push('<div class="fig"><span class="fv">' + money(you.incomePaid) +
+           '</span><span class="fk">income actually paid to her</span></div>');
+    var breachText = you.breachMonths === 0 ? "none"
+      : you.breachMonths < 12 ? you.breachMonths + " mo"
+      : (you.breachMonths / 12).toFixed(0) + " yrs";
+    h.push('<div class="fig"><span class="fv">' + breachText +
+           '</span><span class="fk">spent outside a defensible equity ' +
+           "range</span></div>");
+    h.push("</div>");
+
+    /* scores */
+    h.push('<hr class="div">');
+    h.push("<h2>The three scores</h2>");
+    h.push('<div class="stack">');
+
+    var outcomeShare = Math.max(0, Math.min(1, you.survival));
+    var sScore = you.scores;
+    var sShare = Math.max(0, (sScore.suitability + sScore.suitabilityMax) /
+                             (2 * sScore.suitabilityMax));
+    var cShare = Math.max(0, (sScore.conduct + sScore.conductMax) /
+                             (2 * sScore.conductMax));
+
+    function scoreBlock(name, share, valueText, note) {
+      var v = verdictFor(share);
+      return '<div class="score"><div class="score-head">' +
+        '<span class="score-name">' + name + " · " + v.word + "</span>" +
+        '<span class="score-val">' + valueText + "</span></div>" +
+        '<div class="meter"><i class="' + v.cls + '" style="width:' +
+        (share * 100).toFixed(0) + '%"></i></div>' +
+        '<p class="score-note">' + note + "</p></div>";
+    }
+
+    h.push(scoreBlock("Outcome", outcomeShare, pct(you.survival) + " to 95",
+      "Her money is the only thing here she will ever actually feel."));
+    h.push(scoreBlock("Suitability", sShare,
+      sScore.suitability + " of " + sScore.suitabilityMax,
+      "Thirteen allocation calls, less " + sScore.breachPenalty +
+      " for time spent outside a defensible equity range."));
+    h.push(scoreBlock("Conduct", cShare,
+      sScore.conduct + " of " + sScore.conductMax,
+      "How she was handled. This is the half of the job that never shows up " +
+      "in a performance number."));
+    h.push("</div>");
+
+    /* comparison */
+    h.push('<hr class="div">');
+    h.push("<h2>Against three other managers</h2>");
+    h.push("<p>The same client, the same twenty-two years, the same engine. " +
+           "Only the decisions differ.</p>");
+
+    var w = 320, ht = 190;
+    var allVals = [];
+    runs.forEach(function (r) {
+      r.result.series.value.forEach(function (v) { allVals.push(v); });
+    });
+    var hi = Math.max.apply(null, allVals);
+    var paths = runs.map(function (r) {
+      var pts = r.result.series.value.map(function (v, i) {
+        var x = (i / (r.result.series.value.length - 1)) * w;
+        var y = 8 + (1 - v / hi) * (ht - 26);
+        return (i === 0 ? "M" : "L") + x.toFixed(2) + " " + y.toFixed(2);
+      }).join(" ");
+      return '<path d="' + pts + '" fill="none" stroke="' + r.colour +
+             '" stroke-width="' + (r.key === "you" ? 2.2 : 1.2) +
+             '" vector-effect="non-scaling-stroke" stroke-linejoin="round"></path>';
+    }).join("");
+
+    h.push('<svg class="compare-chart" viewBox="0 0 ' + w + " " + ht +
+           '" preserveAspectRatio="none" aria-hidden="true">' + paths + "</svg>");
+    h.push('<div class="legend">');
+    runs.forEach(function (r) {
+      h.push('<span><i style="background:' + r.colour + '"></i>' +
+             esc(r.label) + "</span>");
+    });
+    h.push("</div>");
+
+    h.push('<div class="scroller"><table><thead><tr><th>Manager</th>' +
+           "<th>Final pot</th><th>Draw</th><th>Lasts to 95</th>" +
+           "<th>Charges</th></tr></thead><tbody>");
+    runs.forEach(function (r) {
+      h.push('<tr' + (r.key === "you" ? ' class="you"' : "") + "><td>" +
+             esc(r.label) + '</td><td class="num">' +
+             moneyShort(r.result.finalValue) + '</td><td class="num">' +
+             (isFinite(r.result.drawRate) ? pct(r.result.drawRate, 1) : "n/a") +
+             '</td><td class="num">' + pct(r.result.survival) +
+             '</td><td class="num">' + moneyShort(r.result.totalFees) +
+             "</td></tr>");
+    });
+    h.push("</tbody></table></div>");
+
+    h.push('<div class="stack-tight" style="margin-top:1rem">');
+    runs.slice(1).forEach(function (r) {
+      h.push('<p class="footnote"><strong style="color:var(--ink)">' +
+             esc(r.label) + ".</strong> " + esc(r.blurb) + "</p>");
+    });
+    h.push("</div>");
+
+    /* the letter */
+    h.push('<hr class="div">');
+    h.push("<h2>The letter your decisions imply</h2>");
+    h.push('<div class="letter"><p class="from">Annual review · July 2026 ' +
+           "· private and confidential</p>");
+    letterFor(you).forEach(function (p) { h.push("<p>" + esc(p) + "</p>"); });
+    h.push("</div>");
+
+    /* the file */
+    h.push('<hr class="div">');
+    h.push("<h2>What the file says about you</h2>");
+    h.push("<p>Every note your choices put on the record, in order. This is " +
+           "what a compliance review, or a complaint, would actually read.</p>");
+    h.push('<div class="file-list">');
+    if (!you.fileNotes.length) {
+      h.push('<p class="footnote">Nothing was recorded, which is its own ' +
+             "finding.</p>");
+    }
+    you.fileNotes.forEach(function (f) {
+      h.push('<div class="file-row"><span class="fd">' + esc(f.month) +
+             "</span><span>" + esc(f.text) + "</span></div>");
+    });
+    h.push("</div>");
+
+    h.push('<hr class="div">');
+    h.push('<div class="actions"><button class="primary" id="again">' +
+           "Run it again</button></div>");
+
+    h.push('<p class="footnote" style="margin-top:2rem">' + provenance() + "</p>");
+    h.push("</div>");
+
+    sec.innerHTML = h.join("");
+    $("again").addEventListener("click", function () {
+      picks = {}; step = 0;
+      sec.hidden = true;
+      $("play").hidden = false;
+      renderStep();
+    });
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }
+
+  function provenance() {
+    var s = D.survival;
+    return "Every market figure is measured from daily total-return data for " +
+      "SPY, EFA, EEM, RSP, AGG and SHY, plus the 13-week Treasury bill rate, " +
+      "over " + monthName(D.market.start) + " to " + monthName(D.market.end) +
+      ". The odds of her " +
+      "income lasting to 95 come from the same block bootstrap as the main " +
+      "paper: " + s.paths.toLocaleString("en-GB") + " paths, " +
+      s.block_months + "-month blocks, " + s.horizon_years + "-year horizon, " +
+      "seeded for reproducibility. Ruth is invented. Nothing that happens to " +
+      "her is.";
+  }
+
+  /* ---- boot ---- */
+  function boot() {
+    $("intro-text").innerHTML = esc(D.client.intro).replace(/\n\n/g, "</p><p>");
+    var p = D.client.profile;
+    var rows = [
+      ["Questionnaire", p.questionnaire],
+      ["Risk tolerance", p.tolerance],
+      ["Capacity for loss", p.capacity],
+      ["Time horizon", p.horizon],
+      ["Return she needs", p.requirement]
+    ];
+    $("profile").innerHTML = rows.map(function (r) {
+      return "<div><dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd></div>";
+    }).join("");
+    $("provenance").textContent = provenance();
+
+    $("start").addEventListener("click", function () {
+      $("brief").hidden = true;
+      $("play").hidden = false;
+      renderStep();
+    });
+  }
+
+  boot();
+})();
+</script>

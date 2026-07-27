@@ -230,6 +230,37 @@ The recurring part is income tax. Taxing an assumed 2.5% income yield at 35% in 
 
 Over almost 23 years, the risk labels ranked market risk correctly, but the risk beneath a fixed label drifted in three ways. Diversification drift: in 2022 a "cautious" portfolio's loss was 82% as large as an all-equity portfolio's, against 29% in 2008, because the stock-bond correlation flipped from −0.14 to +0.23, and it then recovered more slowly than the aggressive portfolios. Concentration drift: cap-weighted US equity grew far more concentrated in its largest companies, so a "balanced" label in 2025 covers a different exposure than in 2019. Objective drift: for a long-horizon retiree drawing 4% or more, the most cautious portfolio was the *least* likely to last. A static label ranks market risk, but cannot capture goal risk, the changing shape of the portfolio, or a client's changing needs. And against all of that uncertainty, the one near-certain number is cost: a 1% annual fee alone consumed about a quarter of the balanced portfolio's 23-year gain.
 
+## The companion tool: The Manager's Seat
+
+Everything above is an argument. [`managers-seat/`](managers-seat/) is the same
+argument made playable.
+
+You take the discretionary manager's chair for one private client, Ruth
+Alderman, from January 2004 to July 2026. Thirteen decisions against real market
+history: what to recommend when her questionnaire and her income requirement
+disagree, what to do when she rings in October 2008 wanting everything in cash,
+where her income comes from in March 2020, and what to write when she asks in
+October 2022 why the safe portfolio lost money. It scores three things at the
+end, because the job is three things: what happened to her money, whether what
+she held was ever defensible for her circumstances, and how she was treated.
+
+The three drifts in this paper are what you run into, in order, without being
+told they are coming.
+
+| Manager | Final pot | Income draw | Income lasts to 95 |
+|---|---|---|---|
+| By the book | £789,381 | 4.9% | 99% |
+| Left alone | £438,555 | 8.7% | 45% |
+| Her instincts | £14,942 | 257% | 0% |
+
+It runs on the same data as this paper and calls into `analysis/monte_carlo.py`
+for the survival figures, so the tool and the paper cannot disagree. Every market
+figure quoted in its narrative is recomputed from the CSVs by its test suite.
+
+Open `managers-seat/index.html` in any browser. It is self-contained and works
+offline. `managers-seat/transcript.md` has every decision and option as plain
+text if you would rather read than play.
+
 ## Method
 
 **Portfolios.** Five risk-graded portfolios defined by equity weight, rebalanced to target every year, plus one semiconductor-tilted sleeve. The equity portion is a global blend: every unit of equity is split 60% US, 30% developed markets outside the US, and 10% emerging markets, roughly global market-cap weight. The bond portion is US aggregate bonds.
