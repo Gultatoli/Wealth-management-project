@@ -15,21 +15,19 @@ risk), flags the drift that bites each client, reads out present-day conditions 
 would trigger a decision, and ends with a plain-English review note of the kind a
 manager sends a private client.
 
-It exists to prove two things in an interview at once: that the author can think like
-a portfolio manager (construct, weigh, decide) and that the author can be trusted in
-front of a client (translate, explain, recommend). Both halves of the discretionary
-fund management job, in one artifact.
+It exists to hold two things together: portfolio thinking (construct, weigh, decide)
+and client handling (translate, explain, recommend). Those are the two halves of
+discretionary fund management, and most portfolio tools show only the first.
 
 ## Who it is for
 
-- The primary reader is an interviewer at a UK private-client wealth manager
-  (Rathbones, RBC Brewin Dolphin, Brooks Macdonald, Quilter Cheviot, Evelyn Partners),
-  opening a link on a phone.
-- The secondary reader is the author, using it to rehearse the reasoning out loud.
+- The primary reader works in UK private-client wealth management and is opening a
+  link on a phone.
+- The secondary reader wants the paper's argument without reading the whole paper.
 
 ### Success criteria
 
-1. An interviewer with no context understands the market-risk-versus-goal-risk point
+1. A reader with no context understands the market-risk-versus-goal-risk point
    within the first screen.
 2. Every number on the page traces back to the same data and engine as the paper, so
    the two never contradict each other.
@@ -121,8 +119,8 @@ conditions to adjust portfolios."
 
 ### Refreshed-to-latest (meaning #2)
 The whole tool is rebuilt on the latest close and stamped "data as of DD Mon YYYY".
-Rebuilds happen in a session, since the author cannot run Python on mobile. This is
-stated plainly on the page.
+Rebuilding is a deliberate step rather than something the page does on load, so the
+data date is always stated plainly on the page.
 
 ### Live-regime monitor (meaning #3)
 A "current conditions" panel per client that turns each drift into a present-day signal:
