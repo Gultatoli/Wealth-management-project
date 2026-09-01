@@ -230,9 +230,53 @@ The recurring part is income tax. Taxing an assumed 2.5% income yield at 35% in 
 
 Over almost 23 years, the risk labels ranked market risk correctly, but the risk beneath a fixed label drifted in three ways. Diversification drift: in 2022 a "cautious" portfolio's loss was 82% as large as an all-equity portfolio's, against 29% in 2008, because the stock-bond correlation flipped from −0.14 to +0.23, and it then recovered more slowly than the aggressive portfolios. Concentration drift: cap-weighted US equity grew far more concentrated in its largest companies, so a "balanced" label in 2025 covers a different exposure than in 2019. Objective drift: for a long-horizon retiree drawing 4% or more, the most cautious portfolio was the *least* likely to last. A static label ranks market risk, but cannot capture goal risk, the changing shape of the portfolio, or a client's changing needs. And against all of that uncertainty, the one near-certain number is cost: a 1% annual fee alone consumed about a quarter of the balanced portfolio's 23-year gain.
 
-## Companion tool: the Suitability Lens
+## Companion tools
 
-The analysis diagnoses the problem. The [Suitability Lens](suitability-lens/) acts on it. It takes three private clients, a retiree, a house saver, and a concentrated investor, and shows each one's market risk and goal risk side by side, the drift that bites them, a present-day read on whether that drift is a live concern, and the plain-English note a discretionary manager would send. Move a slider and the two kinds of risk pull apart while the risk label stays fixed. It runs on the same data and engine as this analysis, so the numbers never disagree. To try it, open `suitability-lens/index.html` in a browser, or see the [folder README](suitability-lens/) to rebuild it from the latest data.
+The analysis is an argument. Two tools carry it into the work a discretionary
+manager actually does, and both run on the same data and the same engine as the
+paper, so their numbers cannot disagree with it.
+
+### The Suitability Lens
+
+[`suitability-lens/`](suitability-lens/) acts on the diagnosis. It takes three
+private clients, a retiree, a house saver, and a concentrated investor, and
+shows each one's market risk and goal risk side by side, the drift that bites
+them, a present-day read on whether that drift is a live concern, and the plain
+English note a discretionary manager would send. Move the slider and the two
+kinds of risk pull apart while the risk label stays fixed.
+
+Open `suitability-lens/index.html` in a browser, or see the
+[folder README](suitability-lens/) to rebuild it from the latest data.
+
+### The Manager's Seat
+
+[`managers-seat/`](managers-seat/) makes the argument playable. You take the
+discretionary manager's chair for one private client, Ruth Alderman, from
+January 2004 to July 2026. Thirteen decisions against real market history: what
+to recommend when her questionnaire and her income requirement disagree, what to
+do when she rings in October 2008 wanting everything in cash, where her income
+comes from in March 2020, and what to write when she asks in October 2022 why
+the safe portfolio lost money. The three drifts above are what you run into, in
+order, without being told they are coming.
+
+It scores three things at the end, because the job is three things: what
+happened to her money, whether what she held was ever defensible for her
+circumstances, and how she was treated. Then it shows the same client run by
+three other managers.
+
+| Manager | Final pot | Income draw | Income lasts to 95 |
+|---|---|---|---|
+| By the book | £789,381 | 4.9% | 99% |
+| Left alone | £438,555 | 8.7% | 45% |
+| Her instincts | £14,942 | 257% | 0% |
+
+"Left alone" is not negligence. It is the questionnaire answer, taken at face
+value and never revisited. The gap between the first two rows is the honest case
+for what a discretionary manager is for.
+
+Open `managers-seat/index.html` in any browser. It is self-contained and works
+offline. `managers-seat/transcript.md` has every decision and option as plain
+text if you would rather read than play.
 
 ## Method
 
@@ -287,6 +331,14 @@ python3 costs.py          # fees and tax drag
 ```
 
 Every number in this README comes from `analysis/analyse.py`, `analysis/monte_carlo.py`, or `analysis/costs.py`, and the full printouts are saved in `analysis/results.md`, `analysis/monte_carlo_results.md`, and `analysis/costs_results.md`.
+
+To rebuild the two companion tools:
+
+```
+cd suitability-lens && python3 build_cases.py && python3 -m pytest -q
+cd managers-seat   && python3 fetch_extra.py   # once, adds the cash and short-bond series
+                      python3 build.py && python3 -m pytest -q
+```
 
 ## Data sources
 
