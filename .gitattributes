@@ -1,0 +1,32 @@
+# Which files are source and which are build output.
+#
+# Both tools keep a hand-written template and a built page. `template.html` is
+# written by hand. `index.html` and `artifact_body.html` are produced from it by
+# `render.py`, with the market data and the engine inlined, so they are output
+# rather than source and they are rebuilt whenever the data is refreshed.
+#
+# Marking them keeps them out of GitHub's language statistics, which otherwise
+# report this as an HTML project on the strength of two generated files, and
+# collapses them by default in diffs so a data refresh does not bury a real
+# change under a hundred thousand characters of regenerated page.
+
+managers-seat/index.html            linguist-generated=true
+managers-seat/artifact_body.html    linguist-generated=true
+suitability-lens/index.html         linguist-generated=true
+suitability-lens/artifact_body.html linguist-generated=true
+
+# The data payloads those pages embed, written by the build step.
+managers-seat/*.json                linguist-generated=true
+suitability-lens/*.json             linguist-generated=true
+
+# Market data, downloaded by analysis/fetch_data.py.
+data/*.csv                          linguist-generated=true
+
+# Printouts and transcripts written by the analysis and build scripts. These are
+# meant to be read, and marking them generated does not hide them. It only says
+# that editing them by hand would be pointless, because the next build overwrites
+# them.
+analysis/results.md                 linguist-generated=true
+analysis/monte_carlo_results.md     linguist-generated=true
+analysis/costs_results.md           linguist-generated=true
+managers-seat/transcript.md         linguist-generated=true
