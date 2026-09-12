@@ -31,10 +31,11 @@ python3 -m pytest -q              # run the checks
 
 ## Files
 
-- `clients.py` — the three client cases (pure data).
-- `engine.py` — computation: market-risk lens, goal-risk lens, current-conditions
-  signals. Imports the analysis modules; reimplements nothing.
-- `notes.py` — the client-facing review notes.
-- `build_cases.py` — assembles `cases.json` and calls the renderer.
-- `template.html` / `render.py` — the self-contained page and how it is built.
-- `test_*.py` — checks for each piece.
+- `clients.py`: the three client cases (pure data).
+- `engine.py`: the computation. Market-risk lens, goal-risk lens and
+  current-conditions signals. Imports the analysis modules and reimplements
+  nothing.
+- `notes.py`: the client-facing review notes.
+- `build_cases.py`: assembles `cases.json` and calls the renderer.
+- `template.html` / `render.py`: the self-contained page and how it is built.
+- `test_*.py`: checks for each piece.
